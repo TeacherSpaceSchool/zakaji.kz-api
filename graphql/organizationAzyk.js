@@ -46,6 +46,7 @@ const type = `
     del: String
     priotiry: Int
     pass: String
+    autointegrate: Boolean
   }
 `;
 
@@ -58,8 +59,8 @@ const query = `
 `;
 
 const mutation = `
-    addOrganization(cities: [String]!, catalog: Upload, pass: String, warehouse: String!, miniInfo: String!, priotiry: Int, minimumOrder: Int, image: Upload!, name: String!, address: [String]!, email: [String]!, phone: [String]!, info: String!, accessToClient: Boolean!, consignation: Boolean!, addedClient: Boolean!, unite: Boolean!, superagent: Boolean!, onlyDistrict: Boolean!, dateDelivery: Boolean!, onlyIntegrate: Boolean!, autoAccept: Boolean!): Data
-    setOrganization(cities: [String], pass: String, catalog: Upload, warehouse: String, miniInfo: String, _id: ID!, priotiry: Int, minimumOrder: Int, image: Upload, name: String, address: [String], email: [String], phone: [String], info: String, accessToClient: Boolean, consignation: Boolean, addedClient: Boolean, unite: Boolean, superagent: Boolean, onlyDistrict: Boolean, dateDelivery: Boolean, onlyIntegrate: Boolean, autoAccept: Boolean): Data
+    addOrganization(cities: [String]!, autointegrate: Boolean!, catalog: Upload, pass: String, warehouse: String!, miniInfo: String!, priotiry: Int, minimumOrder: Int, image: Upload!, name: String!, address: [String]!, email: [String]!, phone: [String]!, info: String!, accessToClient: Boolean!, consignation: Boolean!, addedClient: Boolean!, unite: Boolean!, superagent: Boolean!, onlyDistrict: Boolean!, dateDelivery: Boolean!, onlyIntegrate: Boolean!, autoAccept: Boolean!): Data
+    setOrganization(cities: [String], pass: String, autointegrate: Boolean, catalog: Upload, warehouse: String, miniInfo: String, _id: ID!, priotiry: Int, minimumOrder: Int, image: Upload, name: String, address: [String], email: [String], phone: [String], info: String, accessToClient: Boolean, consignation: Boolean, addedClient: Boolean, unite: Boolean, superagent: Boolean, onlyDistrict: Boolean, dateDelivery: Boolean, onlyIntegrate: Boolean, autoAccept: Boolean): Data
     restoreOrganization(_id: [ID]!): Data
     deleteOrganization(_id: [ID]!): Data
     onoffOrganization(_id: [ID]!): Data
@@ -92,17 +93,18 @@ const resolvers = {
                 ...['суперагент', 'суперэкспедитор'].includes(user.role)?{superagent: true}:{},
                 ...user.city?{cities: user.city}:{}
             })
-                .select('name _id image miniInfo onlyIntegrate onlyDistrict priotiry catalog')
+                .select('name _id image miniInfo unite onlyIntegrate onlyDistrict priotiry catalog')
                 .sort('-priotiry')
                 .lean()
-            if(!user.organization) {
+            /*?*/if(/*!user.organization*/true) {
                 subBrands = await SubBrandAzyk.find({
                     _id: {$in: subBrands},
                     name: {'$regex': search, '$options': 'i'},
                     status: 'admin'===user.role?filter.length===0?{'$regex': filter, '$options': 'i'}:filter:'active',
                     ...city?{cities: city}:{},
                     del: {$ne: 'deleted'},
-                    ...user.city?{cities: user.city}:{}
+                    ...user.city?{cities: user.city}:{},
+                    /*?*/...user.organization?{organization: user.organization}:{}
                 })
                     .populate({
                         path: 'organization',
@@ -219,7 +221,7 @@ const resolvers = {
 };
 
 const resolversMutation = {
-    addOrganization: async(parent, {cities, catalog, addedClient, autoAccept, dateDelivery, pass, warehouse, superagent, unite, miniInfo, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
+    addOrganization: async(parent, {cities, autointegrate, catalog, addedClient, autoAccept, dateDelivery, pass, warehouse, superagent, unite, miniInfo, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
         if(user.role==='admin'){
             let { stream, filename } = await image;
             filename = await saveImage(stream, filename)
@@ -245,7 +247,8 @@ const resolversMutation = {
                 cities: cities,
                 autoAccept: autoAccept,
                 dateDelivery,
-                addedClient: addedClient
+                addedClient,
+                autointegrate
             });
             if(catalog){
                 let { stream, filename } = await catalog;
@@ -257,7 +260,7 @@ const resolversMutation = {
         }
         return {data: 'OK'};
     },
-    setOrganization: async(parent, {catalog, cities, addedClient, dateDelivery, autoAccept, pass, warehouse, miniInfo, superagent, unite, _id, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
+    setOrganization: async(parent, {catalog, cities, addedClient, autointegrate, dateDelivery, autoAccept, pass, warehouse, miniInfo, superagent, unite, _id, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
         if(user.role==='admin'||(['суперорганизация', 'организация'].includes(user.role)&&user.organization.toString()===_id.toString())) {
             let object = await OrganizationAzyk.findById(_id)
             if (image) {
@@ -292,6 +295,7 @@ const resolversMutation = {
             if(minimumOrder!=undefined) object.minimumOrder = minimumOrder
             if(miniInfo!=undefined) object.miniInfo = miniInfo
             if(addedClient!=undefined) object.addedClient = addedClient
+            if(autointegrate!=undefined) object.autointegrate = autointegrate
             await object.save();
         }
         return {data: 'OK'}

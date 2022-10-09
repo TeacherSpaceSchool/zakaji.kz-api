@@ -5,6 +5,8 @@ const ModelsErrorAzyk = require('../models/errorAzyk');
 const ReceivedDataAzyk = require('../models/receivedDataAzyk');
 const OrganizationAzyk = require('../models/organizationAzyk');
 const EmploymentAzyk = require('../models/employmentAzyk');
+const AgentRouteAzyk = require('../models/agentRouteAzyk');
+const ClientAzyk = require('../models/clientAzyk');
 const Integrate1CAzyk = require('../models/integrate1CAzyk');
 const ItemAzyk = require('../models/itemAzyk');
 const SubCategoryAzyk = require('../models/subCategoryAzyk');
@@ -92,7 +94,7 @@ router.post('/:pass/put/item', async (req, res, next) => {
 
 router.post('/:pass/put/client', async (req, res, next) => {
     let organization = await OrganizationAzyk
-        .findOne({pass: req.params.pass}).select('_id').lean()
+        .findOne({pass: req.params.pass}).select('_id autointegrate cities').lean()
     res.set('Content+Type', 'application/xml');
     try{
         let agent
@@ -103,9 +105,9 @@ router.post('/:pass/put/client', async (req, res, next) => {
                 integrate1CAzyk = await Integrate1CAzyk.findOne({
                     organization: organization._id,
                     guid: req.body.elements[0].elements[i].attributes.guid
-                }).select('_id').lean()
+                }).lean()
                 agent = await Integrate1CAzyk.findOne({
-                    organization: organization,
+                    organization: organization._id,
                     guid: req.body.elements[0].elements[i].attributes.agent
                 }).select('agent').lean()
                 if (agent) {
@@ -113,17 +115,98 @@ router.post('/:pass/put/client', async (req, res, next) => {
                         agent: agent.agent
                     }).select('_id').lean()
                     if(district) {
-                        _object = new ReceivedDataAzyk({
-                            status: integrate1CAzyk ? 'изменить' : 'добавить',
-                            organization: organization._id,
-                            name: req.body.elements[0].elements[i].attributes.name,
-                            guid: req.body.elements[0].elements[i].attributes.guid,
-                            addres: req.body.elements[0].elements[i].attributes.address,
-                            agent: agent.agent,
-                            phone: req.body.elements[0].elements[i].attributes.tel,
-                            type: 'клиент'
-                        });
-                        await ReceivedDataAzyk.create(_object)
+                        if(organization.autointegrate) {
+                            if(!integrate1CAzyk){
+                                district = await DistrictAzyk.findOne({
+                                    agent: agent.agent
+                                })
+                                let _client = new UserAzyk({
+                                    login: randomstring.generate(20),
+                                    role: 'client',
+                                    status: 'active',
+                                    password: '12345678',
+                                });
+                                _client = await UserAzyk.create(_client);
+                                _client = new ClientAzyk({
+                                    name: req.body.elements[0].elements[i].attributes.name ? req.body.elements[0].elements[i].attributes.name : 'Новый',
+                                    phone: req.body.elements[0].elements[i].attributes.tel,
+                                    city: organization.cities[0],
+                                    address: [[
+                                        req.body.elements[0].elements[i].attributes.address ? req.body.elements[0].elements[i].attributes.address : '',
+                                        '',
+                                        req.body.elements[0].elements[i].attributes.name ? req.body.elements[0].elements[i].attributes.name : ''
+                                    ]],
+                                    user: _client._id,
+                                    notification: false
+                                });
+                                _client = await ClientAzyk.create(_client);
+                                let _object = new Integrate1CAzyk({
+                                    item: null,
+                                    client: _client._id,
+                                    agent: null,
+                                    ecspeditor: null,
+                                    organization: organization._id,
+                                    guid: req.body.elements[0].elements[i].attributes.guid,
+                                });
+                                await Integrate1CAzyk.create(_object)
+                                district.client.push(_client._id)
+                                await district.save()
+                            }
+                            else {
+                                let _client = await ClientAzyk.findOne({_id: integrate1CAzyk.client});
+                                _client.phone = req.body.elements[0].elements[i].attributes.tel
+                                _client.address = [[
+                                    req.body.elements[0].elements[i].attributes.address ? req.body.elements[0].elements[i].attributes.address : '',
+                                    '',
+                                    req.body.elements[0].elements[i].attributes.name ? req.body.elements[0].elements[i].attributes.name : ''
+                                ]]
+                                await _client.save()
+
+                                let newDistrict = await DistrictAzyk.findOne({
+                                    agent: agent.agent
+                                })
+                                if(newDistrict&&!newDistrict.client.toString().includes(_client._id.toString())){
+                                    let oldDistrict = await DistrictAzyk.findOne({
+                                        client: _client._id
+                                    })
+                                    if(oldDistrict){
+                                        let objectAgentRouteAzyk = await AgentRouteAzyk.findOne({district: oldDistrict._id})
+                                        if(objectAgentRouteAzyk){
+                                            for(let i=0; i<7; i++) {
+                                                let index = objectAgentRouteAzyk.clients[i].indexOf(_client._id.toString())
+                                                if(index!==-1)
+                                                    objectAgentRouteAzyk.clients[i].splice(index, 1)
+                                            }
+                                            await objectAgentRouteAzyk.save()
+                                        }
+                                        for(let i=0; i<oldDistrict.client.length; i++) {
+                                            if(oldDistrict.client[i].toString()===_client._id.toString()){
+                                                console.log('oldDistrict', !!oldDistrict)
+                                                oldDistrict.client.splice(i, 1)
+                                                break
+                                            }
+                                        }
+                                        await oldDistrict.save()
+                                    }
+
+                                    newDistrict.client.push(_client._id)
+                                    await newDistrict.save()
+                                }
+                            }
+                        }
+                        else {
+                            _object = new ReceivedDataAzyk({
+                                status: integrate1CAzyk ? 'изменить' : 'добавить',
+                                organization: organization._id,
+                                name: req.body.elements[0].elements[i].attributes.name,
+                                guid: req.body.elements[0].elements[i].attributes.guid,
+                                addres: req.body.elements[0].elements[i].attributes.address,
+                                agent: agent.agent,
+                                phone: req.body.elements[0].elements[i].attributes.tel,
+                                type: 'клиент'
+                            });
+                            await ReceivedDataAzyk.create(_object)
+                        }
                     }
                 }
             }

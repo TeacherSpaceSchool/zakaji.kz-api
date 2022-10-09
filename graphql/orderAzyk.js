@@ -42,6 +42,7 @@ const type = `
   type Invoice {
     _id: ID
      discount: Int
+     inv: Int
     createdAt: Date
     updatedAt: Date
     orders: [Order]
@@ -1132,7 +1133,8 @@ const resolversMutation = {
                     $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt: dateEnd}}],
                     del: {$ne: 'deleted'},
                     cancelClient: null,
-                    cancelForwarder: null
+                    cancelForwarder: null,
+                    inv: {$ne: 1}
                 })
                     .populate('client')
                     .sort('-createdAt')

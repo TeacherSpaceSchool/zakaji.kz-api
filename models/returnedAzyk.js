@@ -6,6 +6,7 @@ const ReturnedAzykSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ClientAzyk'
     },
+    dateDelivery: Date,
     allPrice: Number,
     allTonnage: {
         type: Number,
@@ -24,11 +25,11 @@ const ReturnedAzykSchema = mongoose.Schema({
     address: [String],
     confirmationForwarder: {
         type: Boolean,
-        default: false
+        default: null
     },
     cancelForwarder: {
         type: Boolean,
-        default: false
+        default: null
     },
     sync: {
         type: Number,

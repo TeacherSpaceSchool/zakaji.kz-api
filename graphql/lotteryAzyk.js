@@ -136,6 +136,7 @@ const resolversMutation = {
                     _tickets.push({status: 'розыгрыш', number: tickets[i].number, client: tickets[i].client, prize: undefined})
                 }
                 object.tickets = _tickets
+                object.markModified('tickets');
             }
             let _prizes = []
             for(let i = 0; i<prizes.length;i++) {
@@ -160,6 +161,7 @@ const resolversMutation = {
                 }
             }
             object.prizes = _prizes
+            object.markModified('prizes');
             let _photoReports = []
             for(let i = 0; i<photoReports.length;i++) {
                 if(photoReports[i].image) {
@@ -181,6 +183,7 @@ const resolversMutation = {
                 }
             }
             object.photoReports = _photoReports
+            object.markModified('photoReports');
             await object.save();
         }
         return {data: 'OK'}

@@ -46,11 +46,16 @@ module.exports.setSingleOutXMLReturnedAzyk = async(returned) => {
                 let guidEcspeditor = await Integrate1CAzyk
                     .findOne({$and: [{ecspeditor: district.ecspeditor}, {ecspeditor: {$ne: null}}], organization: returned.organization._id}).select('guid').lean()
                 if (guidAgent && guidEcspeditor) {
-                    let date = new Date(returned.createdAt)
-                    if(date.getHours()>=3)
-                        date.setDate(date.getDate() + 1)
-                    if(date.getDay()===0)
-                        date.setDate(date.getDate() + 1)
+                    let date
+                    if(returned.dateDelivery)
+                        date = new Date(returned.dateDelivery)
+                    else {
+                        date = new Date(returned.createdAt)
+                        if(date.getHours()>=3)
+                            date.setDate(date.getDate() + 1)
+                        if(date.getDay()===0)
+                            date.setDate(date.getDate() + 1)
+                    }
                     let newOutXMLReturnedAzyk = new SingleOutXMLReturnedAzyk({
                         data: [],
                         guid: returned.guid?returned.guid:await uuidv1(),

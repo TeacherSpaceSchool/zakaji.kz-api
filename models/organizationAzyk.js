@@ -46,6 +46,10 @@ const OrganizationAzykSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    autointegrate: {
+        type: Boolean,
+        default: false
+    },
     unite: {
         type: Boolean,
         default: true

@@ -24,8 +24,10 @@ module.exports.createAdmin = async () => {
         });
         findAdmin = await UserAzyk.create(_user);
     }
-    else if(!findAdmin.checkPassword(adminPass))
-        await UserAzyk.updateOne({login: 'admin'}, {password: adminPass});
+    else if(!findAdmin.checkPassword(adminPass)) {
+        findAdmin.password = adminPass
+        await findAdmin.save()
+    }
     adminId = findAdmin._id.toString();
 }
 

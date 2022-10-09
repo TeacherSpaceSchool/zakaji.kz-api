@@ -99,12 +99,12 @@ const resolversMutation = {
                     let _client = new UserAzyk({
                         login: randomstring.generate(20),
                         role: 'client',
-                        status: 'deactive',
+                        status: 'active',
                         password: '12345678',
                     });
                     _client = await UserAzyk.create(_client);
                     _client = new ClientAzyk({
-                        name: 'Новый',
+                        name: receivedData.name ? receivedData.name : 'Новый',
                         phone: receivedData.phone,
                         city: organization.cities[0],
                         address: [[receivedData.addres ? receivedData.addres : '', '', receivedData.name ? receivedData.name : '']],
@@ -156,6 +156,7 @@ const resolversMutation = {
                                 break
                             }
                         }
+                        await oldDistrict.save()
                     }
 
                     newDistrict.client.push(_client._id)

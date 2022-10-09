@@ -30,6 +30,8 @@ const type = `
   }
   type Returned {
     _id: ID
+    inv: Int
+    dateDelivery: Date
     createdAt: Date
     updatedAt: Date
     items: [ReturnedItems]
@@ -94,7 +96,7 @@ const query = `
 
 const mutation = `
      setReturnedLogic(track: Int, forwarder: ID, returneds: [ID]!): Data
-    addReturned(info: String, inv: Boolean, address: [[String]], organization: ID!, items: [ReturnedItemsInput], client: ID!): Data
+    addReturned(info: String, unite: Boolean, inv: Boolean, dateDelivery: Date!, address: [[String]], organization: ID!, items: [ReturnedItemsInput], client: ID!): Data
     setReturned(items: [ReturnedItemsInput], returned: ID, confirmationForwarder: Boolean, cancelForwarder: Boolean): Returned
     deleteReturneds(_id: [ID]!): Data
     restoreReturneds(_id: [ID]!): Data
@@ -751,7 +753,7 @@ const resolvers = {
 };
 
 const resolversMutation = {
-    addReturned: async(parent, {info, address, organization, client, items, inv}, {user}) =>     {
+    addReturned: async(parent, {info, dateDelivery, unite, address, organization, client, items, inv}, {user}) =>     {
         let subbrand = await SubBrandAzyk.findOne({_id: organization}).select('organization').lean()
         if(subbrand)
             organization = subbrand.organization
@@ -794,13 +796,17 @@ const resolversMutation = {
             if(!districtProvider)
                 districtProvider = findDistrict
         }
-        let objectReturned = await ReturnedAzyk.findOne({
-            organization: organization,
-            client: client,
-            $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt:dateEnd}}],
-            del: {$ne: 'deleted'},
-            cancelForwarder: null
-        }).sort('-createdAt')
+        let objectReturned
+        if(unite&&!inv)
+            objectReturned = await ReturnedAzyk.findOne({
+                organization: organization,
+                client: client,
+                dateDelivery: dateDelivery,
+                $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt:dateEnd}}],
+                del: {$ne: 'deleted'},
+                cancelForwarder: {$ne: true},
+                inv: {$ne: 1}
+            }).sort('-createdAt').lean()
         let allPrice = 0
         let allTonnage = 0
         let allSize = 0
@@ -820,6 +826,7 @@ const resolversMutation = {
                 allPrice: allPrice,
                 allTonnage: allTonnage,
                 allSize: allSize,
+                dateDelivery: dateDelivery,
                 number: number,
                 info: info,
                 address: address,
@@ -855,7 +862,7 @@ const resolversMutation = {
                 objectReturned.allSize+=items[i].allSize
                 objectReturned.allTonnage+=items[i].allTonnage
             }
-            await objectReturned.save()
+            await ReturnedAzyk.updateOne({_id: objectReturned._id}, {confirmationForwarder: null, items: objectReturned.items, allPrice: objectReturned.allPrice, allSize: objectReturned.allSize, allTonnage: objectReturned.allTonnage})
         }
         pubsub.publish(RELOAD_RETURNED, { reloadReturned: {
             who: user.role==='admin'?null:user._id,
