@@ -14,7 +14,7 @@ const HistoryReturnedAzyk = require('../models/historyReturnedAzyk');
 const mongoose = require('mongoose');
 const SubBrandAzyk = require('../models/subBrandAzyk');
 const uuidv1 = require('uuid/v1.js');
-const maxDates = 31
+const maxDates = 90
 
 const type = `
   type ReturnedItems {

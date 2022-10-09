@@ -150,10 +150,13 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                 });
                                 await Integrate1CAzyk.create(_object)
                                 district.client.push(_client._id)
+                                district.markModified('client');
                                 await district.save()
                             }
                             else {
                                 let _client = await ClientAzyk.findOne({_id: integrate1CAzyk.client});
+                                if(req.body.elements[0].elements[i].attributes.name)
+                                    _client.name = req.body.elements[0].elements[i].attributes.name
                                 _client.phone = req.body.elements[0].elements[i].attributes.tel
                                 _client.address = [[
                                     req.body.elements[0].elements[i].attributes.address ? req.body.elements[0].elements[i].attributes.address : '',
@@ -177,6 +180,7 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                                 if(index!==-1)
                                                     objectAgentRouteAzyk.clients[i].splice(index, 1)
                                             }
+                                            objectAgentRouteAzyk.markModified('clients');
                                             await objectAgentRouteAzyk.save()
                                         }
                                         for(let i=0; i<oldDistrict.client.length; i++) {
@@ -186,10 +190,12 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                                 break
                                             }
                                         }
+                                        oldDistrict.markModified('client');
                                         await oldDistrict.save()
                                     }
 
                                     newDistrict.client.push(_client._id)
+                                    newDistrict.markModified('client');
                                     await newDistrict.save()
                                 }
                             }

@@ -31,6 +31,7 @@ module.exports.setSingleOutXMLReturnedAzyk = async(returned) => {
                     amount: returned.items[i].allPrice
                 })
         }
+        outXMLReturnedAzyk.markModified('data');
         await outXMLReturnedAzyk.save()
         await ReturnedAzyk.updateMany({_id: returned._id}, {sync: 1})
     }
@@ -112,8 +113,10 @@ module.exports.setSingleOutXMLAzyk = async(invoice) => {
                     amount: checkFloat(count * price),
                     priotiry: invoice.orders[i].item.priotiry
                 })
+
             }
         }
+        outXMLAzyk.markModified('data');
         await outXMLAzyk.save()
         await InvoiceAzyk.updateMany({_id: invoice._id}, {sync: 1})
         return 1

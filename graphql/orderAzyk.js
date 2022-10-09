@@ -18,7 +18,7 @@ const { withFilter } = require('graphql-subscriptions');
 const RELOAD_ORDER = 'RELOAD_ORDER';
 const HistoryOrderAzyk = require('../models/historyOrderAzyk');
 const { checkFloat } = require('../module/const');
-const maxDates = 31
+const maxDates = 90
 const { checkAdss } = require('../graphql/adsAzyk');
 const SpecialPriceClientAzyk = require('../models/specialPriceClientAzyk');
 const uuidv1 = require('uuid/v1.js');
@@ -1281,6 +1281,7 @@ const resolversMutation = {
                     editor = `${user.role} ${employment.name}`
                 }
                 objectInvoice.editor = editor
+                objectInvoice.markModified('orders');
                 await objectInvoice.save();
                 let objectHistoryOrder = new HistoryOrderAzyk({
                     invoice: objectInvoice._id,

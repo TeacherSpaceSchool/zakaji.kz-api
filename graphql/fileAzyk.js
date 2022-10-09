@@ -3,7 +3,7 @@ const {pdDDMMYYHHMM} = require('../module/const');
 const fs = require('fs');
 const path = require('path');
 const dirs = ['images', 'xlsx']
-const { deleteFile, urlMain, checkFloat } = require('../module/const');
+const { deleteFile, urlMain } = require('../module/const');
 const ClientAzyk = require('../models/clientAzyk');
 const BlogAzyk = require('../models/blogAzyk');
 const ContactAzyk = require('../models/contactAzyk');
@@ -102,7 +102,7 @@ const resolvers = {
 const resolversMutation = {
     clearAllDeactiveFiles: async(parent, ctx, {user}) => {
         if('admin'===user.role){
-            let data = [], url, filesUrl = []
+            let data = [], url
             for (let i = 0; i < dirs.length; i++) {
                 url = path.join(app.dirname, 'public', dirs[i])
                 const files = fs.readdirSync(url, 'utf8');
@@ -110,7 +110,7 @@ const resolversMutation = {
                     data.push(`${urlMain}/${dirs[i]}/${name}`)
                 }
             }
-            filesUrl = [
+            let filesUrl = [
                 ...(await ClientAzyk.find({image: {$in: data}}).distinct('image').lean()),
                 ...(await BlogAzyk.find({image: {$in: data}}).distinct('image').lean()),
                 ...(await ContactAzyk.find({image: {$in: data}}).distinct('image').lean()),

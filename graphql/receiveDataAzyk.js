@@ -51,7 +51,7 @@ const resolvers = {
                 .lean()
         }
     },
-    filterReceivedData: async(parent, ctx, {user}) => {
+    filterReceivedData: async() => {
         let filter = [
             {
                 name: 'Все',
@@ -122,6 +122,7 @@ const resolversMutation = {
                     });
                     await Integrate1CAzyk.create(_object)
                     district.client.push(_client._id)
+                    district.markModified('client');
                     await district.save()
                     await ReceivedDataAzyk.deleteMany({_id: _id})
                 }
@@ -129,6 +130,8 @@ const resolversMutation = {
             }
             else {
                 let _client = await ClientAzyk.findOne({_id: integrate1CAzyk.client});
+                if(receivedData.name)
+                    _client.name = receivedData.name
                 _client.phone = receivedData.phone
                 _client.address = [[receivedData.addres?receivedData.addres:'', '', receivedData.name?receivedData.name:'']]
                 await _client.save()
@@ -148,6 +151,7 @@ const resolversMutation = {
                                 if(index!==-1)
                                     objectAgentRouteAzyk.clients[i].splice(index, 1)
                             }
+                            objectAgentRouteAzyk.markModified('clients');
                             await objectAgentRouteAzyk.save()
                         }
                         for(let i=0; i<oldDistrict.client.length; i++) {
@@ -156,10 +160,12 @@ const resolversMutation = {
                                 break
                             }
                         }
+                        oldDistrict.markModified('client');
                         await oldDistrict.save()
                     }
 
                     newDistrict.client.push(_client._id)
+                    newDistrict.markModified('client');
                     await newDistrict.save()
                 }
 

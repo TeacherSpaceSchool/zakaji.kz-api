@@ -226,6 +226,7 @@ const resolversMutation = {
                     shuffleTickets[i].status = 'проигравший'
                 }
                 object.tickets = [...winners, ...shuffleTickets, ...object.tickets]
+                object.markModified('tickets');
                 object.status = 'разыграна'
                 await object.save();
             }
