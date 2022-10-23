@@ -5,7 +5,7 @@ const DistributerAzyk = require('../models/distributerAzyk');
 const DistrictAzyk = require('../models/districtAzyk');
 const ClientAzyk = require('../models/clientAzyk');
 const randomstring = require('randomstring');
-const { setSingleOutXMLReturnedAzyk, cancelSingleOutXMLReturnedAzyk, setSingleOutXMLReturnedAzykLogic } = require('../module/singleOutXMLAzyk');
+const { setSingleOutXMLReturnedAzykLogic } = require('../module/singleOutXMLAzyk');
 const { pubsub } = require('./index');
 const { checkFloat } = require('../module/const');
 const { withFilter } = require('graphql-subscriptions');
@@ -96,7 +96,7 @@ const query = `
 
 const mutation = `
      setReturnedLogic(track: Int, forwarder: ID, returneds: [ID]!): Data
-    addReturned(info: String, unite: Boolean, inv: Boolean, dateDelivery: Date!, address: [[String]], organization: ID!, items: [ReturnedItemsInput], client: ID!): Data
+    addReturned(info: String, autoAccept: Boolean, unite: Boolean, inv: Boolean, dateDelivery: Date!, address: [[String]], organization: ID!, items: [ReturnedItemsInput], client: ID!): Data
     setReturned(items: [ReturnedItemsInput], returned: ID, confirmationForwarder: Boolean, cancelForwarder: Boolean): Returned
     deleteReturneds(_id: [ID]!): Data
     restoreReturneds(_id: [ID]!): Data
@@ -752,8 +752,106 @@ const resolvers = {
     },
 };
 
+const setReturned = async ({items, returned, confirmationForwarder, cancelForwarder, user}) => {
+    let object = await ReturnedAzyk.findOne({_id: returned})
+        .populate({
+            path: 'client'
+        })
+        .populate({path: 'organization'})
+        .populate({path: 'sale'})
+        .populate({path: 'provider'});
+    let district = null;
+    let distributers = await DistributerAzyk.find({
+        sales: object.organization._id
+    }).select('distributer').lean()
+    if(distributers.length>0){
+        for(let i=0; i<distributers.length; i++){
+            let findDistrict = await DistrictAzyk.findOne({
+                organization: distributers[i].distributer,
+                client: object.client._id
+            }).select('agent manager').lean()
+            if(findDistrict)
+                district = findDistrict
+        }
+    }
+    if(!district) {
+        let findDistrict = await DistrictAzyk.findOne({
+            organization: object.organization._id,
+            client: object.client._id
+        }).select('agent manager').lean()
+        if(findDistrict)
+            district = findDistrict
+    }
+    let editor;
+    if(items.length>0&&(['менеджер', 'admin', 'агент', 'суперагент', 'суперорганизация', 'организация'].includes(user.role))){
+        let allPrice = 0
+        let allTonnage = 0
+        let allSize = 0
+        for(let i=0; i<items.length;i++){
+            allPrice += items[i].allPrice
+            allTonnage += items[i].allTonnage
+            allSize += items[i].allSize
+        }
+
+        object.allPrice = checkFloat(allPrice)
+        object.allTonnage = allTonnage
+        object.allSize = allSize
+        object.items = items
+    }
+    if(user.role==='admin'){
+        editor = 'админ'
+    }
+    else if(user.role==='client'){
+        editor = `клиент ${object.client.name}`
+    }
+    else{
+        let employment = await EmploymentAzyk.findOne({user: user._id}).select('name').lean()
+        editor = `${user.role} ${employment.name}`
+    }
+    object.editor = editor
+    if(!object.cancelForwarder&&confirmationForwarder!=undefined){
+        object.confirmationForwarder = confirmationForwarder
+    }
+    if(!object.confirmationForwarder&&cancelForwarder!=undefined){
+        if(cancelForwarder){
+            object.cancelForwarder = true
+        }
+        else if(!cancelForwarder) {
+            object.cancelForwarder = false
+        }
+    }
+    await object.save();
+
+    if(object.organization.pass&&object.organization.pass.length){
+        if(object.confirmationForwarder) {
+            const { setSingleOutXMLReturnedAzyk } = require('../module/singleOutXMLAzyk');
+            await setSingleOutXMLReturnedAzyk(object)
+        }
+        else if(object.cancelForwarder) {
+            const { cancelSingleOutXMLReturnedAzyk } = require('../module/singleOutXMLAzyk');
+            await cancelSingleOutXMLReturnedAzyk(object)
+        }
+    }
+
+    let objectHistoryReturned = new HistoryReturnedAzyk({
+        returned: returned,
+        editor: editor,
+    });
+    await HistoryReturnedAzyk.create(objectHistoryReturned);
+    pubsub.publish(RELOAD_RETURNED, { reloadReturned: {
+        who: user.role==='admin'?null:user._id,
+        client: object.client._id,
+        agent: district?district.agent:null,
+        organization: object.organization._id,
+        returned: object,
+        manager: district?district.manager:undefined,
+        type: 'SET'
+    } });
+    return object
+}
+
 const resolversMutation = {
-    addReturned: async(parent, {info, dateDelivery, unite, address, organization, client, items, inv}, {user}) =>     {
+    addReturned: async(parent, {info, dateDelivery, unite, autoAccept, address, organization, client, items, inv}, {user}) =>     {
         let subbrand = await SubBrandAzyk.findOne({_id: organization}).select('organization').lean()
         if(subbrand)
             organization = subbrand.organization
@@ -810,6 +908,7 @@ const resolversMutation = {
         let allPrice = 0
         let allTonnage = 0
         let allSize = 0
+        console.log(objectReturned)
         if(!objectReturned){
             let number = randomstring.generate({length: 12, charset: 'numeric'});
             while (await ReturnedAzyk.findOne({number: number}).select('_id').lean())
@@ -864,15 +963,18 @@ const resolversMutation = {
             }
             await ReturnedAzyk.updateOne({_id: objectReturned._id}, {confirmationForwarder: null, items: objectReturned.items, allPrice: objectReturned.allPrice, allSize: objectReturned.allSize, allTonnage: objectReturned.allTonnage})
         }
-        pubsub.publish(RELOAD_RETURNED, { reloadReturned: {
-            who: user.role==='admin'?null:user._id,
-            agent: districtSales?districtSales.agent:null,
-            client: client,
-            organization: organization,
-            returned: objectReturned,
-            manager: districtSales?districtSales.manager:undefined,
-            type: 'ADD'
-        } });
+        if(autoAccept)
+            await setReturned({returned: objectReturned._id, items: [], confirmationForwarder: true, user})
+        else
+            pubsub.publish(RELOAD_RETURNED, { reloadReturned: {
+                who: user.role==='admin'?null:user._id,
+                agent: districtSales?districtSales.agent:null,
+                client: client,
+                organization: organization,
+                returned: objectReturned,
+                manager: districtSales?districtSales.manager:undefined,
+                type: 'ADD'
+            } });
         return {data: 'OK'};
     },
     deleteReturneds: async(parent, {_id}, {user}) => {
@@ -909,99 +1011,7 @@ const resolversMutation = {
         return {data: 'OK'};
     },
     setReturned: async(parent, {items, returned, confirmationForwarder, cancelForwarder}, {user}) => {
-        let object = await ReturnedAzyk.findOne({_id: returned})
-            .populate({
-                path: 'client'
-            })
-            .populate({path: 'organization'})
-            .populate({path: 'sale'})
-            .populate({path: 'provider'});
-        let district = null;
-        let distributers = await DistributerAzyk.find({
-            sales: object.organization._id
-        }).select('distributer').lean()
-        if(distributers.length>0){
-            for(let i=0; i<distributers.length; i++){
-                let findDistrict = await DistrictAzyk.findOne({
-                    organization: distributers[i].distributer,
-                    client: object.client._id
-                }).select('agent manager').lean()
-                if(findDistrict)
-                    district = findDistrict
-            }
-        }
-        if(!district) {
-            let findDistrict = await DistrictAzyk.findOne({
-                organization: object.organization._id,
-                client: object.client._id
-            }).select('agent manager').lean()
-            if(findDistrict)
-                district = findDistrict
-        }
-        let editor;
-        if(items.length>0&&(['менеджер', 'admin', 'агент', 'суперагент', 'суперорганизация', 'организация'].includes(user.role))){
-            let allPrice = 0
-            let allTonnage = 0
-            let allSize = 0
-            for(let i=0; i<items.length;i++){
-                allPrice += items[i].allPrice
-                allTonnage += items[i].allTonnage
-                allSize += items[i].allSize
-            }
-
-            object.allPrice = checkFloat(allPrice)
-            object.allTonnage = allTonnage
-            object.allSize = allSize
-            object.items = items
-        }
-        if(user.role==='admin'){
-            editor = 'админ'
-        }
-        else if(user.role==='client'){
-            editor = `клиент ${object.client.name}`
-        }
-        else{
-            let employment = await EmploymentAzyk.findOne({user: user._id}).select('name').lean()
-            editor = `${user.role} ${employment.name}`
-        }
-        object.editor = editor
-        if(!object.cancelForwarder&&confirmationForwarder!=undefined){
-            object.confirmationForwarder = confirmationForwarder
-        }
-        if(!object.confirmationForwarder&&cancelForwarder!=undefined){
-            if(cancelForwarder){
-                object.cancelForwarder = true
-            }
-            else if(!cancelForwarder) {
-                object.cancelForwarder = false
-            }
-        }
-        await object.save();
-
-        if(object.organization.pass&&object.organization.pass.length){
-            if(object.confirmationForwarder) {
-                await setSingleOutXMLReturnedAzyk(object)
-            }
-            else if(object.cancelForwarder) {
-                await cancelSingleOutXMLReturnedAzyk(object)
-            }
-        }
-
-        let objectHistoryReturned = new HistoryReturnedAzyk({
-            returned: returned,
-            editor: editor,
-        });
-        await HistoryReturnedAzyk.create(objectHistoryReturned);
-        pubsub.publish(RELOAD_RETURNED, { reloadReturned: {
-            who: user.role==='admin'?null:user._id,
-            client: object.client._id,
-            agent: district?district.agent:null,
-            organization: object.organization._id,
-            returned: object,
-            manager: district?district.manager:undefined,
-            type: 'SET'
-        } });
-        return object
+        return await setReturned({items, returned, confirmationForwarder, cancelForwarder, user})
     }
 };
 

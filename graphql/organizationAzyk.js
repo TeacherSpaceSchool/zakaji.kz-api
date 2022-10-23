@@ -93,7 +93,7 @@ const resolvers = {
                 ...['суперагент', 'суперэкспедитор'].includes(user.role)?{superagent: true}:{},
                 ...user.city?{cities: user.city}:{}
             })
-                .select('name _id image miniInfo unite onlyIntegrate onlyDistrict priotiry catalog')
+                .select('name autoAccept _id image miniInfo unite onlyIntegrate onlyDistrict priotiry catalog')
                 .sort('-priotiry')
                 .lean()
             /*?*/if(/*!user.organization*/true) {
@@ -108,13 +108,14 @@ const resolvers = {
                 })
                     .populate({
                         path: 'organization',
-                        select: 'onlyIntegrate onlyDistrict _id unite'
+                        select: 'onlyIntegrate onlyDistrict _id unite autoAccept'
                     })
                     .sort('-priotiry')
                     .lean()
                 for(let i = 0; i<subBrands.length;i++){
                     subBrands[i].type = 'subBrand'
                     subBrands[i].unite = subBrands[i].organization.unite
+                    subBrands[i].autoAccept = subBrands[i].organization.autoAccept
                 }
                 organizationsRes = [...subBrands, ...organizations]
                 organizationsRes = organizationsRes.sort(function (a, b) {

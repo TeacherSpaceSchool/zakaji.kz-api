@@ -10,7 +10,7 @@ const ClientAzyk = require('../models/clientAzyk');
 const AdsAzyk = require('../models/adsAzyk');
 const mongoose = require('mongoose');
 const DiscountClient = require('../models/discountClientAzyk');
-const { setSingleOutXMLAzyk, cancelSingleOutXMLAzyk, setSingleOutXMLAzykLogic } = require('../module/singleOutXMLAzyk');
+const { setSingleOutXMLAzyk, setSingleOutXMLAzykLogic } = require('../module/singleOutXMLAzyk');
 const randomstring = require('randomstring');
 const EmploymentAzyk = require('../models/employmentAzyk');
 const { pubsub } = require('./index');
@@ -130,7 +130,7 @@ const query = `
 
 const mutation = `
     acceptOrders: Data
-    addOrders(priority: Int!, dateDelivery: Date!, info: String, inv: Boolean, unite: Boolean, paymentMethod: String, organization: ID!, client: ID!): Data
+    addOrders(priority: Int!, dateDelivery: Date!, info: String, inv: Boolean, unite: Boolean, autoAccept: Boolean, paymentMethod: String, organization: ID!, client: ID!): Data
     setOrder(orders: [OrderInput], invoice: ID): Invoice
     setInvoice(adss: [ID], taken: Boolean, invoice: ID!, confirmationClient: Boolean, confirmationForwarder: Boolean, cancelClient: Boolean, cancelForwarder: Boolean, paymentConsignation: Boolean): Data
     setInvoicesLogic(track: Int, forwarder: ID, invoices: [ID]!): Data
@@ -986,6 +986,250 @@ const resolvers = {
     },
 };
 
+const setOrder = async ({orders, invoice, user}) => {
+    let object = await InvoiceAzyk.findOne({_id: invoice})
+        .populate({
+            path: 'client'
+        })
+    let editor;
+    if(orders.length>0&&(['экспедитор', 'суперэкспедитор', 'менеджер', 'организация', 'суперорганизация', 'admin', 'client', 'агент', 'суперагент'].includes(user.role))){
+        let allPrice = 0
+        let allTonnage = 0
+        let allSize = 0
+        let returnedPrice = 0
+        let consignmentPrice = 0
+        for(let i=0; i<orders.length;i++){
+            await OrderAzyk.updateMany(
+                {_id: orders[i]._id},
+                {
+                    count: orders[i].count,
+                    allPrice: orders[i].allPrice,
+                    consignmentPrice: checkFloat(orders[i].consignmentPrice),
+                    returned: orders[i].returned,
+                    consignment: orders[i].consignment,
+                    allSize: checkFloat(orders[i].allSize),
+                    allTonnage: checkFloat(orders[i].allTonnage)
+                });
+            returnedPrice += checkFloat(orders[i].returned * (orders[i].allPrice / orders[i].count))
+            allPrice += orders[i].allPrice
+            allTonnage += orders[i].allTonnage
+            allSize += orders[i].allSize
+            consignmentPrice += orders[i].consignmentPrice
+        }
+        object.allPrice = checkFloat(allPrice)
+        object.allTonnage = checkFloat(allTonnage)
+        object.consignmentPrice = checkFloat(consignmentPrice)
+        object.allSize = checkFloat(allSize)
+        object.orders = orders.map(order=>order._id)
+        object.returnedPrice = checkFloat(returnedPrice)
+        await object.save();
+    }
+    let resInvoice = await InvoiceAzyk.findOne({_id: invoice})
+        .populate({
+            path: 'orders',
+            populate: {
+                path: 'item'
+            }
+        })
+        .populate({
+            path: 'client',
+            populate: [
+                {path: 'user'}
+            ]
+        })
+        .populate({path: 'agent'})
+        .populate({path: 'provider'})
+        .populate({path: 'sales'})
+        .populate({path: 'adss'})
+        .populate({path: 'forwarder'})
+        .populate({path: 'organization'})
+    if(user.role==='admin'){
+        editor = 'админ'
+    }
+    else if(user.role==='client'){
+        editor = `клиент ${resInvoice.client.name}`
+    }
+    else{
+        let employment = await EmploymentAzyk.findOne({user: user._id}).select('name').lean()
+        editor = `${user.role} ${employment.name}`
+    }
+    resInvoice.editor = editor
+    await resInvoice.save();
+    let objectHistoryOrder = new HistoryOrderAzyk({
+        invoice: invoice,
+        orders: orders.map(order=>{
+            return {
+                item: order.name,
+                count: order.count,
+                consignment: order.consignment,
+                returned: order.returned
+            }
+        }),
+        editor: editor,
+    });
+    await HistoryOrderAzyk.create(objectHistoryOrder);
+
+    let date = new Date()
+    date.setDate(date.getDate() - 7)
+    if((resInvoice.guid||resInvoice.dateDelivery>date)&&resInvoice.organization.pass&&resInvoice.organization.pass.length){
+        if(resInvoice.orders[0].status==='принят') {
+            const { setSingleOutXMLAzyk } = require('../module/singleOutXMLAzyk');
+            resInvoice.sync = await setSingleOutXMLAzyk(resInvoice)
+        }
+        else if(resInvoice.orders[0].status==='отмена') {
+            const { cancelSingleOutXMLAzyk } = require('../module/singleOutXMLAzyk');
+            resInvoice.sync = await cancelSingleOutXMLAzyk(resInvoice)
+        }
+    }
+
+    let superDistrict = await DistrictAzyk.findOne({
+        organization: null,
+        client: resInvoice.client._id
+    })
+        .select('agent')
+        .lean();
+    let district = null;
+    let distributers = await DistributerAzyk.find({
+        sales: resInvoice.organization._id
+    })
+        .select('distributer')
+        .lean()
+    if(distributers.length>0){
+        for(let i=0; i<distributers.length; i++){
+            if(distributers[i].distributer){
+                district = await DistrictAzyk.findOne({
+                    organization: distributers[i].distributer,
+                    client: resInvoice.client._id
+                })
+                    .select('organization manager agent')
+                    .lean()
+            }
+        }
+    }
+    if(!district) {
+        district = await DistrictAzyk.findOne({
+            organization: resInvoice.organization._id,
+            client: resInvoice.client._id
+        })
+            .select('organization manager agent')
+            .lean()
+    }
+
+    pubsub.publish(RELOAD_ORDER, { reloadOrder: {
+        who: user.role==='admin'?null:user._id,
+        client: resInvoice.client._id,
+        agent: district?district.agent:undefined,
+        superagent: superDistrict?superDistrict.agent:undefined,
+        organization: resInvoice.organization._id,
+        distributer: district&&district.organization.toString()!==resInvoice.organization._id.toString()?district.organization:undefined,
+        invoice: resInvoice,
+        manager: district?district.manager:undefined,
+        type: 'SET'
+    } });
+    return resInvoice
+}
+
+const setInvoice = async ({adss, taken, invoice, confirmationClient, confirmationForwarder, cancelClient, cancelForwarder, paymentConsignation, user}) => {
+    let object = await InvoiceAzyk.findOne({_id: invoice}).populate('client').populate('order')
+    let admin = ['admin', 'суперагент', 'суперэкспедитор'].includes(user.role)
+    let client = 'client'===user.role&&user.client.toString()===object.client._id.toString()
+    let undefinedClient = ['менеджер', 'суперорганизация', 'организация', 'экспедитор', 'агент'].includes(user.role)&&!object.client.user
+    let employment = ['менеджер', 'суперорганизация', 'организация', 'агент', 'экспедитор'].includes(user.role)&&[object.organization.toString(), object.sale?object.sale.toString():'lol', object.provider?object.provider.toString():'lol'].includes(user.organization.toString());
+    if(adss!=undefined&&(admin||undefinedClient||employment)) {
+        object.adss = adss
+    }
+    if(paymentConsignation!=undefined&&(admin||undefinedClient||employment)){
+        object.paymentConsignation = paymentConsignation
+    }
+    if(taken!=undefined&&(admin||employment)){
+        object.taken = taken
+        if(taken) {
+            await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'принят'})
+        }
+        else {
+            await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'обработка', returned: 0})
+            object.confirmationForwarder = false
+            object.confirmationClient = false
+            object.returnedPrice = 0
+            object.sync = object.sync!==0?1:0
+        }
+    }
+    if(object.taken&&confirmationClient!=undefined&&(admin||undefinedClient||client)){
+        object.confirmationClient = confirmationClient
+        if(!confirmationClient) {
+            await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'принят'})
+        }
+    }
+    if(object.taken&&confirmationForwarder!=undefined&&(admin||employment)){
+        object.confirmationForwarder = confirmationForwarder
+        if(!confirmationForwarder) {
+            await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'принят'})
+        }
+    }
+    if(object.taken&&object.confirmationForwarder&&object.confirmationClient){
+        await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'выполнен'})
+    }
+
+    if(object.taken&&(object.confirmationForwarder||object.confirmationClient)){
+        let route = await RouteAzyk.findOne({invoices: invoice}).populate({
+            path: 'invoices',
+            populate : {
+                path : 'orders',
+            }
+        });
+        if(route){
+            let completedRoute = true;
+            for(let i = 0; i<route.invoices.length; i++) {
+                if(!route.invoices[i].cancelClient&&!route.invoices[i].cancelForwarder)
+                    completedRoute = route.invoices[i].confirmationForwarder;
+            }
+            if(completedRoute)
+                route.status = 'выполнен';
+            else
+                route.status = 'выполняется';
+            await route.save();
+        }
+    }
+
+    if(cancelClient!=undefined&&(cancelClient||object.cancelClient!=undefined)&&!object.cancelForwarder&&(admin||client)){
+        if(cancelClient){
+            object.cancelClient = new Date()
+            await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'отмена'})
+        }
+        else if(!cancelClient) {
+            let difference = (new Date()).getTime() - (object.cancelClient).getTime();
+            let differenceMinutes = checkFloat(difference / 60000);
+            if (differenceMinutes < 10||user.role==='admin') {
+                object.cancelClient = undefined
+                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'обработка'})
+                object.taken = undefined
+                object.confirmationClient = undefined
+                object.confirmationForwarder = undefined
+            }
+        }
+    }
+
+    if(cancelForwarder!=undefined&&(cancelForwarder||object.cancelForwarder!=undefined)&&!object.cancelClient&&(admin||employment)){
+        if(cancelForwarder){
+            object.cancelForwarder = new Date()
+            await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'отмена'})
+        }
+        else if(!cancelForwarder) {
+            let difference = (new Date()).getTime() - (object.cancelForwarder).getTime();
+            let differenceMinutes = checkFloat(difference / 60000);
+            if (differenceMinutes < 10||user.role==='admin') {
+                object.cancelForwarder = undefined
+                object.cancelClient = undefined
+                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'обработка'})
+                object.taken = undefined
+                object.confirmationClient = undefined
+                object.confirmationForwarder = undefined
+            }
+        }
+    }
+    await object.save();
+}
+
 const resolversMutation = {
     acceptOrders: async(parent, ctx, {user}) => {
         if(user.role==='admin'){
@@ -1057,7 +1301,7 @@ const resolversMutation = {
         }
         return {data: 'OK'};
     },
-    addOrders: async(parent, {priority, dateDelivery, info, paymentMethod, organization, client, inv, unite}, {user}) => {
+    addOrders: async(parent, {priority, autoAccept, dateDelivery, info, paymentMethod, organization, client, inv, unite}, {user}) => {
         let guid = await uuidv1()
         if(user.client)
             client = user.client
@@ -1289,6 +1533,10 @@ const resolversMutation = {
                 });
                 await HistoryOrderAzyk.create(objectHistoryOrder);
             }
+            if(autoAccept&&user.employment) {
+                await setInvoice({taken: true, invoice: objectInvoice._id, user})
+                await setOrder({orders: [], invoice: objectInvoice._id, user})
+            }
             let newInvoice = await InvoiceAzyk.findOne({_id: objectInvoice._id})
                 .select(' _id agent createdAt updatedAt allTonnage allSize client allPrice consignmentPrice returnedPrice info address paymentMethod discount adss editor number confirmationForwarder confirmationClient cancelClient district track forwarder sale provider organization cancelForwarder paymentConsignation taken sync city dateDelivery')
                 .populate({path: 'client', select: '_id name email phone user', populate: [{path: 'user', select: '_id'}]})
@@ -1438,245 +1686,10 @@ const resolversMutation = {
         return {data: 'OK'};
     },
     setOrder: async(parent, {orders, invoice}, {user}) => {
-        let object = await InvoiceAzyk.findOne({_id: invoice})
-            .populate({
-                path: 'client'
-            })
-        let editor;
-        if(orders.length>0&&(['экспедитор', 'суперэкспедитор', 'менеджер', 'организация', 'суперорганизация', 'admin', 'client', 'агент', 'суперагент'].includes(user.role))){
-            let allPrice = 0
-            let allTonnage = 0
-            let allSize = 0
-           let returnedPrice = 0
-            let consignmentPrice = 0
-            for(let i=0; i<orders.length;i++){
-                await OrderAzyk.updateMany(
-                    {_id: orders[i]._id},
-                    {
-                        count: orders[i].count,
-                        allPrice: orders[i].allPrice,
-                        consignmentPrice: checkFloat(orders[i].consignmentPrice),
-                        returned: orders[i].returned,
-                        consignment: orders[i].consignment,
-                        allSize: checkFloat(orders[i].allSize),
-                        allTonnage: checkFloat(orders[i].allTonnage)
-                    });
-                returnedPrice += checkFloat(orders[i].returned * (orders[i].allPrice / orders[i].count))
-                allPrice += orders[i].allPrice
-                allTonnage += orders[i].allTonnage
-                allSize += orders[i].allSize
-                consignmentPrice += orders[i].consignmentPrice
-            }
-            object.allPrice = checkFloat(allPrice)
-            object.allTonnage = checkFloat(allTonnage)
-            object.consignmentPrice = checkFloat(consignmentPrice)
-            object.allSize = checkFloat(allSize)
-            object.orders = orders.map(order=>order._id)
-            object.returnedPrice = checkFloat(returnedPrice)
-            await object.save();
-        }
-        let resInvoice = await InvoiceAzyk.findOne({_id: invoice})
-            .populate({
-                path: 'orders',
-                populate: {
-                    path: 'item'
-                }
-            })
-            .populate({
-                path: 'client',
-                populate: [
-                    {path: 'user'}
-                ]
-            })
-            .populate({path: 'agent'})
-            .populate({path: 'provider'})
-            .populate({path: 'sales'})
-            .populate({path: 'adss'})
-            .populate({path: 'forwarder'})
-            .populate({path: 'organization'})
-        if(user.role==='admin'){
-            editor = 'админ'
-        }
-        else if(user.role==='client'){
-            editor = `клиент ${resInvoice.client.name}`
-        }
-        else{
-            let employment = await EmploymentAzyk.findOne({user: user._id}).select('name').lean()
-            editor = `${user.role} ${employment.name}`
-        }
-        resInvoice.editor = editor
-        await resInvoice.save();
-        let objectHistoryOrder = new HistoryOrderAzyk({
-            invoice: invoice,
-            orders: orders.map(order=>{
-                return {
-                    item: order.name,
-                    count: order.count,
-                    consignment: order.consignment,
-                    returned: order.returned
-                }
-            }),
-            editor: editor,
-        });
-        await HistoryOrderAzyk.create(objectHistoryOrder);
-
-        let date = new Date()
-        date.setDate(date.getDate() - 7)
-        if((resInvoice.guid||resInvoice.dateDelivery>date)&&resInvoice.organization.pass&&resInvoice.organization.pass.length){
-            if(resInvoice.orders[0].status==='принят') {
-                resInvoice.sync = await setSingleOutXMLAzyk(resInvoice)
-            }
-            else if(resInvoice.orders[0].status==='отмена') {
-                resInvoice.sync = await cancelSingleOutXMLAzyk(resInvoice)
-            }
-        }
-
-        let superDistrict = await DistrictAzyk.findOne({
-            organization: null,
-            client: resInvoice.client._id
-        })
-            .select('agent')
-            .lean();
-        let district = null;
-        let distributers = await DistributerAzyk.find({
-            sales: resInvoice.organization._id
-        })
-            .select('distributer')
-            .lean()
-        if(distributers.length>0){
-            for(let i=0; i<distributers.length; i++){
-                if(distributers[i].distributer){
-                    district = await DistrictAzyk.findOne({
-                        organization: distributers[i].distributer,
-                        client: resInvoice.client._id
-                    })
-                        .select('organization manager agent')
-                        .lean()
-                }
-            }
-        }
-        if(!district) {
-            district = await DistrictAzyk.findOne({
-                organization: resInvoice.organization._id,
-                client: resInvoice.client._id
-            })
-                .select('organization manager agent')
-                .lean()
-        }
-
-        pubsub.publish(RELOAD_ORDER, { reloadOrder: {
-            who: user.role==='admin'?null:user._id,
-            client: resInvoice.client._id,
-            agent: district?district.agent:undefined,
-            superagent: superDistrict?superDistrict.agent:undefined,
-            organization: resInvoice.organization._id,
-            distributer: district&&district.organization.toString()!==resInvoice.organization._id.toString()?district.organization:undefined,
-            invoice: resInvoice,
-            manager: district?district.manager:undefined,
-            type: 'SET'
-        } });
-        return resInvoice
+        return await setOrder({orders, invoice, user})
     },
     setInvoice: async(parent, {adss, taken, invoice, confirmationClient, confirmationForwarder, cancelClient, cancelForwarder, paymentConsignation}, {user}) => {
-        let object = await InvoiceAzyk.findOne({_id: invoice}).populate('client').populate('order')
-        let admin = ['admin', 'суперагент', 'суперэкспедитор'].includes(user.role)
-        let client = 'client'===user.role&&user.client.toString()===object.client._id.toString()
-        let undefinedClient = ['менеджер', 'суперорганизация', 'организация', 'экспедитор', 'агент'].includes(user.role)&&!object.client.user
-        let employment = ['менеджер', 'суперорганизация', 'организация', 'агент', 'экспедитор'].includes(user.role)&&[object.organization.toString(), object.sale?object.sale.toString():'lol', object.provider?object.provider.toString():'lol'].includes(user.organization.toString());
-        if(adss!=undefined&&(admin||undefinedClient||employment)) {
-            object.adss = adss
-        }
-        if(paymentConsignation!=undefined&&(admin||undefinedClient||employment)){
-            object.paymentConsignation = paymentConsignation
-        }
-        if(taken!=undefined&&(admin||employment)){
-            object.taken = taken
-            if(taken) {
-                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'принят'})
-            }
-            else {
-                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'обработка', returned: 0})
-                object.confirmationForwarder = false
-                object.confirmationClient = false
-                object.returnedPrice = 0
-                object.sync = object.sync!==0?1:0
-            }
-        }
-        if(object.taken&&confirmationClient!=undefined&&(admin||undefinedClient||client)){
-            object.confirmationClient = confirmationClient
-            if(!confirmationClient) {
-                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'принят'})
-            }
-        }
-        if(object.taken&&confirmationForwarder!=undefined&&(admin||employment)){
-            object.confirmationForwarder = confirmationForwarder
-            if(!confirmationForwarder) {
-                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'принят'})
-            }
-        }
-        if(object.taken&&object.confirmationForwarder&&object.confirmationClient){
-            await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'выполнен'})
-        }
-
-        if(object.taken&&(object.confirmationForwarder||object.confirmationClient)){
-            let route = await RouteAzyk.findOne({invoices: invoice}).populate({
-                path: 'invoices',
-                populate : {
-                    path : 'orders',
-                }
-            });
-            if(route){
-                let completedRoute = true;
-                for(let i = 0; i<route.invoices.length; i++) {
-                    if(!route.invoices[i].cancelClient&&!route.invoices[i].cancelForwarder)
-                        completedRoute = route.invoices[i].confirmationForwarder;
-                }
-                if(completedRoute)
-                    route.status = 'выполнен';
-                else
-                    route.status = 'выполняется';
-                await route.save();
-            }
-        }
-
-        if(cancelClient!=undefined&&(cancelClient||object.cancelClient!=undefined)&&!object.cancelForwarder&&(admin||client)){
-            if(cancelClient){
-                object.cancelClient = new Date()
-                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'отмена'})
-            }
-            else if(!cancelClient) {
-                let difference = (new Date()).getTime() - (object.cancelClient).getTime();
-                let differenceMinutes = checkFloat(difference / 60000);
-                if (differenceMinutes < 10||user.role==='admin') {
-                    object.cancelClient = undefined
-                    await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'обработка'})
-                    object.taken = undefined
-                    object.confirmationClient = undefined
-                    object.confirmationForwarder = undefined
-                }
-            }
-        }
-
-        if(cancelForwarder!=undefined&&(cancelForwarder||object.cancelForwarder!=undefined)&&!object.cancelClient&&(admin||employment)){
-            if(cancelForwarder){
-                object.cancelForwarder = new Date()
-                await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'отмена'})
-            }
-            else if(!cancelForwarder) {
-                let difference = (new Date()).getTime() - (object.cancelForwarder).getTime();
-                let differenceMinutes = checkFloat(difference / 60000);
-                if (differenceMinutes < 10||user.role==='admin') {
-                    object.cancelForwarder = undefined
-                    object.cancelClient = undefined
-                    await OrderAzyk.updateMany({_id: {$in: object.orders}}, {status: 'обработка'})
-                    object.taken = undefined
-                    object.confirmationClient = undefined
-                    object.confirmationForwarder = undefined
-                }
-            }
-        }
-
-        await object.save();
+        await setInvoice({adss, taken, invoice, confirmationClient, confirmationForwarder, cancelClient, cancelForwarder, paymentConsignation, user})
         return {data: 'OK'};
     }
 };
