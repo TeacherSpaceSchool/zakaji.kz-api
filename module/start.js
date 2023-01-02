@@ -96,7 +96,7 @@ let start = async () => {
     await startReminderClient();
     await startOutXMLShoroAzyk();
     await startDeleteBD();
-    await reductionReviews();
+    //await reductionReviews();
     //await reductionToEmployment()
     //await reductionSubBrands();
     //await reductionToDeliveryDate();

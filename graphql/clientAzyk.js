@@ -575,9 +575,7 @@ const resolversMutation = {
     onoffClient: async(parent, { _id }, {user}) => {
         let objects = await ClientAzyk.find({_id: {$in: _id}})
         for(let i=0; i<objects.length; i++){
-            if(
-                ['агент', 'admin', 'суперагент'].includes(user.role)
-            ){
+            if(['агент', 'admin', 'суперагент', 'суперорганизация', 'организация'].includes(user.role)){
                 let object = await UserAzyk.findOne({_id: objects[i].user})
                 object.status = object.status==='active'?'deactive':'active'
                 object.sync = []
