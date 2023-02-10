@@ -185,7 +185,6 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                         }
                                         for(let i=0; i<oldDistrict.client.length; i++) {
                                             if(oldDistrict.client[i].toString()===_client._id.toString()){
-                                                console.log('oldDistrict', !!oldDistrict)
                                                 oldDistrict.client.splice(i, 1)
                                                 break
                                             }

@@ -19,6 +19,7 @@ connectDB.connect()
 if(!isMainThread) {
     cron.schedule('1 3 * * *', async() => {
         try{
+            //автоприем заказов
             let dateStart = new Date()
             dateStart.setHours(3, 0, 0, 0)
             dateStart.setDate(dateStart.getDate() - 1)
@@ -56,7 +57,6 @@ if(!isMainThread) {
                 .populate({path: 'provider'})
                 .populate({path: 'sale'})
                 .populate({path: 'forwarder'})
-
             for(let i = 0; i<orders.length;i++) {
                 orders[i].taken = true
                 await OrderAzyk.updateMany({_id: {$in: orders[i].orders.map(element=>element._id)}}, {status: 'принят'})
@@ -78,6 +78,7 @@ if(!isMainThread) {
                     type: 'SET'
                 } });
             }
+            //генерация акционых заказов
             organizations = await OrganizationAzyk.find({
                 $and: [
                     {pass: {$ne: null}},
@@ -87,6 +88,7 @@ if(!isMainThread) {
             for(let i = 0; i<organizations.length;i++) {
                 await reductionOutAdsXMLAzyk(organizations[i])
             }
+            //очистка выгрузок
             let date = new Date()
             if(date.getDay()===1) {
                 date.setDate(date.getDate() - 7)

@@ -908,7 +908,6 @@ const resolversMutation = {
         let allPrice = 0
         let allTonnage = 0
         let allSize = 0
-        console.log(objectReturned)
         if(!objectReturned){
             let number = randomstring.generate({length: 12, charset: 'numeric'});
             while (await ReturnedAzyk.findOne({number: number}).select('_id').lean())
