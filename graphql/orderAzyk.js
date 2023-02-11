@@ -130,7 +130,7 @@ const query = `
 
 const mutation = `
     acceptOrders: Data
-    addOrders(priority: Int!, dateDelivery: Date!, info: String, inv: Boolean, unite: Boolean, autoAccept: Boolean, paymentMethod: String, organization: ID!, client: ID!): Data
+    addOrders(priority: Int!, dateDelivery: Date!, info: String, inv: Boolean, unite: Boolean, paymentMethod: String, organization: ID!, client: ID!): Data
     setOrder(orders: [OrderInput], invoice: ID): Invoice
     setInvoice(adss: [ID], taken: Boolean, invoice: ID!, confirmationClient: Boolean, confirmationForwarder: Boolean, cancelClient: Boolean, cancelForwarder: Boolean, paymentConsignation: Boolean): Data
     setInvoicesLogic(track: Int, forwarder: ID, invoices: [ID]!): Data
@@ -1235,12 +1235,14 @@ const resolversMutation = {
         if(user.role==='admin'){
             let date = new Date()
             date.setMinutes(date.getMinutes()-10)
+            let organizations = await OrganizationAzyk.find({autoAcceptNight: true}).distinct('_id').lean()
             let orders = await InvoiceAzyk.find({
                 del: {$ne: 'deleted'},
                 taken: {$ne: true},
                 cancelClient: null,
                 cancelForwarder: null,
-                createdAt: {$lte: date}
+                createdAt: {$lte: date},
+                organization: {$in: organizations}
             })
             //.select('client organization orders dateDelivery paymentMethod number _id inv')
                 .populate({
@@ -1301,7 +1303,7 @@ const resolversMutation = {
         }
         return {data: 'OK'};
     },
-    addOrders: async(parent, {priority, autoAccept, dateDelivery, info, paymentMethod, organization, client, inv, unite}, {user}) => {
+    addOrders: async(parent, {priority, dateDelivery, info, paymentMethod, organization, client, inv, unite}, {user}) => {
         let guid = await uuidv1()
         if(user.client)
             client = user.client
@@ -1533,7 +1535,7 @@ const resolversMutation = {
                 });
                 await HistoryOrderAzyk.create(objectHistoryOrder);
             }
-            if(autoAccept&&user.employment) {
+            if(user.employment&&(await OrganizationAzyk.findOne({_id: organization}).select('autoAcceptAgent').lean()).autoAcceptAgent) {
                 await setInvoice({taken: true, invoice: objectInvoice._id, user})
                 await setOrder({orders: [], invoice: objectInvoice._id, user})
             }

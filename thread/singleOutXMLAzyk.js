@@ -25,9 +25,7 @@ if(!isMainThread) {
             dateStart.setDate(dateStart.getDate() - 1)
             let dateEnd = new Date(dateStart)
             dateEnd.setDate(dateEnd.getDate() + 1)
-            let organizations = await OrganizationAzyk.find({
-                autoAccept: true
-            }).distinct('_id').lean()
+            let organizations = await OrganizationAzyk.find({autoAcceptNight: true}).distinct('_id').lean()
             let orders = await InvoiceAzyk.find({
                 del: {$ne: 'deleted'},
                 taken: {$ne: true},

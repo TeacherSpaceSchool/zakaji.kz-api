@@ -62,7 +62,11 @@ const OrganizationAzykSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    autoAccept: {
+    autoAcceptAgent: {
+        type: Boolean,
+        default: false
+    },
+    autoAcceptNight: {
         type: Boolean,
         default: false
     },

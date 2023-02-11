@@ -41,7 +41,8 @@ const type = `
     onlyDistrict: Boolean
     dateDelivery: Boolean
     onlyIntegrate: Boolean
-    autoAccept: Boolean
+    autoAcceptAgent: Boolean
+    autoAcceptNight: Boolean
     cities: [String]
     del: String
     priotiry: Int
@@ -59,8 +60,8 @@ const query = `
 `;
 
 const mutation = `
-    addOrganization(cities: [String]!, autointegrate: Boolean!, catalog: Upload, pass: String, warehouse: String!, miniInfo: String!, priotiry: Int, minimumOrder: Int, image: Upload!, name: String!, address: [String]!, email: [String]!, phone: [String]!, info: String!, accessToClient: Boolean!, consignation: Boolean!, addedClient: Boolean!, unite: Boolean!, superagent: Boolean!, onlyDistrict: Boolean!, dateDelivery: Boolean!, onlyIntegrate: Boolean!, autoAccept: Boolean!): Data
-    setOrganization(cities: [String], pass: String, autointegrate: Boolean, catalog: Upload, warehouse: String, miniInfo: String, _id: ID!, priotiry: Int, minimumOrder: Int, image: Upload, name: String, address: [String], email: [String], phone: [String], info: String, accessToClient: Boolean, consignation: Boolean, addedClient: Boolean, unite: Boolean, superagent: Boolean, onlyDistrict: Boolean, dateDelivery: Boolean, onlyIntegrate: Boolean, autoAccept: Boolean): Data
+    addOrganization(cities: [String]!, autointegrate: Boolean!, catalog: Upload, pass: String, warehouse: String!, miniInfo: String!, priotiry: Int, minimumOrder: Int, image: Upload!, name: String!, address: [String]!, email: [String]!, phone: [String]!, info: String!, accessToClient: Boolean!, consignation: Boolean!, addedClient: Boolean!, unite: Boolean!, superagent: Boolean!, onlyDistrict: Boolean!, dateDelivery: Boolean!, onlyIntegrate: Boolean!, autoAcceptAgent: Boolean!, autoAcceptNight: Boolean!): Data
+    setOrganization(cities: [String], pass: String, autointegrate: Boolean, catalog: Upload, warehouse: String, miniInfo: String, _id: ID!, priotiry: Int, minimumOrder: Int, image: Upload, name: String, address: [String], email: [String], phone: [String], info: String, accessToClient: Boolean, consignation: Boolean, addedClient: Boolean, unite: Boolean, superagent: Boolean, onlyDistrict: Boolean, dateDelivery: Boolean, onlyIntegrate: Boolean, autoAcceptAgent: Boolean, autoAcceptNight: Boolean): Data
     restoreOrganization(_id: [ID]!): Data
     deleteOrganization(_id: [ID]!): Data
     onoffOrganization(_id: [ID]!): Data
@@ -93,7 +94,7 @@ const resolvers = {
                 ...['суперагент', 'суперэкспедитор'].includes(user.role)?{superagent: true}:{},
                 ...user.city?{cities: user.city}:{}
             })
-                .select('name autoAccept _id image miniInfo unite onlyIntegrate onlyDistrict priotiry catalog')
+                .select('name autoAcceptAgent _id image miniInfo unite onlyIntegrate onlyDistrict priotiry catalog')
                 .sort('-priotiry')
                 .lean()
             /*?*/if(/*!user.organization*/true) {
@@ -108,14 +109,14 @@ const resolvers = {
                 })
                     .populate({
                         path: 'organization',
-                        select: 'onlyIntegrate onlyDistrict _id unite autoAccept'
+                        select: 'onlyIntegrate onlyDistrict _id unite autoAcceptAgent'
                     })
                     .sort('-priotiry')
                     .lean()
                 for(let i = 0; i<subBrands.length;i++){
                     subBrands[i].type = 'subBrand'
                     subBrands[i].unite = subBrands[i].organization.unite
-                    subBrands[i].autoAccept = subBrands[i].organization.autoAccept
+                    subBrands[i].autoAcceptAgent = subBrands[i].organization.autoAcceptAgent
                 }
                 organizationsRes = [...subBrands, ...organizations]
                 organizationsRes = organizationsRes.sort(function (a, b) {
@@ -222,7 +223,7 @@ const resolvers = {
 };
 
 const resolversMutation = {
-    addOrganization: async(parent, {cities, autointegrate, catalog, addedClient, autoAccept, dateDelivery, pass, warehouse, superagent, unite, miniInfo, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
+    addOrganization: async(parent, {cities, autointegrate, catalog, addedClient, autoAcceptAgent, autoAcceptNight, dateDelivery, pass, warehouse, superagent, unite, miniInfo, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
         if(user.role==='admin'){
             let { stream, filename } = await image;
             filename = await saveImage(stream, filename)
@@ -246,7 +247,8 @@ const resolversMutation = {
                 miniInfo: miniInfo,
                 warehouse: warehouse,
                 cities: cities,
-                autoAccept: autoAccept,
+                autoAcceptAgent,
+                autoAcceptNight,
                 dateDelivery,
                 addedClient,
                 autointegrate
@@ -261,7 +263,7 @@ const resolversMutation = {
         }
         return {data: 'OK'};
     },
-    setOrganization: async(parent, {catalog, cities, addedClient, autointegrate, dateDelivery, autoAccept, pass, warehouse, miniInfo, superagent, unite, _id, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
+    setOrganization: async(parent, {catalog, cities, addedClient, autointegrate, dateDelivery, autoAcceptAgent, autoAcceptNight, pass, warehouse, miniInfo, superagent, unite, _id, priotiry, info, phone, email, address, image, name, minimumOrder, accessToClient, consignation, onlyDistrict, onlyIntegrate}, {user}) => {
         if(user.role==='admin'||(['суперорганизация', 'организация'].includes(user.role)&&user.organization.toString()===_id.toString())) {
             let object = await OrganizationAzyk.findById(_id)
             if (image) {
@@ -287,7 +289,8 @@ const resolversMutation = {
             if(superagent!=undefined) object.superagent = superagent
             if(unite!=undefined) object.unite = unite
             if(onlyDistrict!=undefined) object.onlyDistrict = onlyDistrict
-            if(autoAccept!=undefined) object.autoAccept = autoAccept
+            if(autoAcceptAgent!=undefined) object.autoAcceptAgent = autoAcceptAgent
+            if(autoAcceptNight!=undefined) object.autoAcceptNight = autoAcceptNight
             if(dateDelivery!=undefined) object.dateDelivery = dateDelivery
             if(onlyIntegrate!=undefined) object.onlyIntegrate = onlyIntegrate
             if(priotiry!=undefined) object.priotiry = priotiry

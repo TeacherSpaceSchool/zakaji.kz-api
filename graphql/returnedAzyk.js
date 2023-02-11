@@ -96,7 +96,7 @@ const query = `
 
 const mutation = `
      setReturnedLogic(track: Int, forwarder: ID, returneds: [ID]!): Data
-    addReturned(info: String, autoAccept: Boolean, unite: Boolean, inv: Boolean, dateDelivery: Date!, address: [[String]], organization: ID!, items: [ReturnedItemsInput], client: ID!): Data
+    addReturned(info: String, unite: Boolean, inv: Boolean, dateDelivery: Date!, address: [[String]], organization: ID!, items: [ReturnedItemsInput], client: ID!): Data
     setReturned(items: [ReturnedItemsInput], returned: ID, confirmationForwarder: Boolean, cancelForwarder: Boolean): Returned
     deleteReturneds(_id: [ID]!): Data
     restoreReturneds(_id: [ID]!): Data
@@ -851,7 +851,7 @@ const setReturned = async ({items, returned, confirmationForwarder, cancelForwar
 }
 
 const resolversMutation = {
-    addReturned: async(parent, {info, dateDelivery, unite, autoAccept, address, organization, client, items, inv}, {user}) =>     {
+    addReturned: async(parent, {info, dateDelivery, unite, address, organization, client, items, inv}, {user}) =>     {
         let subbrand = await SubBrandAzyk.findOne({_id: organization}).select('organization').lean()
         if(subbrand)
             organization = subbrand.organization
@@ -962,7 +962,7 @@ const resolversMutation = {
             }
             await ReturnedAzyk.updateOne({_id: objectReturned._id}, {confirmationForwarder: null, items: objectReturned.items, allPrice: objectReturned.allPrice, allSize: objectReturned.allSize, allTonnage: objectReturned.allTonnage})
         }
-        if(autoAccept)
+        if(user.employment&&(await OrganizationAzyk.findOne({_id: organization}).select('autoAcceptAgent').lean()).autoAcceptAgent)
             await setReturned({returned: objectReturned._id, items: [], confirmationForwarder: true, user})
         else
             pubsub.publish(RELOAD_RETURNED, { reloadReturned: {
