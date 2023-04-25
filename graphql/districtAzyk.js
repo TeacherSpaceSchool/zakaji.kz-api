@@ -222,6 +222,7 @@ const resolversMutation = {
                     }
                 }
                 object.client = client
+                object.markModified('client');
             }
             if(agent)object.agent = agent
             if(ecspeditor)object.ecspeditor = ecspeditor

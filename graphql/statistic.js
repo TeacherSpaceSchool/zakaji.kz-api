@@ -4796,6 +4796,7 @@ const resolversMutation = {
                             district.client.push(integrate1CAzyk.client)
                         }
                     }
+                    district.markModified('client');
                     await district.save()
                 }
             }

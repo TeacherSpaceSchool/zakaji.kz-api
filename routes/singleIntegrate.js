@@ -17,7 +17,7 @@ const DistrictAzyk = require('../models/districtAzyk');
 
 router.post('/:pass/put/item', async (req, res, next) => {
     let organization = await OrganizationAzyk.findOne({pass: req.params.pass}).select('_id cities').lean()
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     let subCategory = (await SubCategoryAzyk.findOne({name: 'Не задано'}).select('_id').lean())._id
     try{
         if(req.body.elements[0].elements) {
@@ -94,8 +94,8 @@ router.post('/:pass/put/item', async (req, res, next) => {
 
 router.post('/:pass/put/client', async (req, res, next) => {
     let organization = await OrganizationAzyk
-        .findOne({pass: req.params.pass}).select('_id autointegrate cities').lean()
-    res.set('Content+Type', 'application/xml');
+        .findOne({pass: req.params.pass}).select('_id autoIntegrate cities').lean()
+    res.set('Content-Type', 'application/xml');
     try{
         let agent
         let _object
@@ -115,11 +115,14 @@ router.post('/:pass/put/client', async (req, res, next) => {
                         agent: agent.agent
                     }).select('_id').lean()
                     if(district) {
-                        if(organization.autointegrate) {
+                        if(organization.autoIntegrate) {
+                            //новый клиент
                             if(!integrate1CAzyk){
+                                //ищем район
                                 district = await DistrictAzyk.findOne({
                                     agent: agent.agent
                                 })
+                                //создаем клиента
                                 let _client = new UserAzyk({
                                     login: randomstring.generate(20),
                                     role: 'client',
@@ -140,6 +143,7 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                     notification: false
                                 });
                                 _client = await ClientAzyk.create(_client);
+                                //создаем интеграцию
                                 let _object = new Integrate1CAzyk({
                                     item: null,
                                     client: _client._id,
@@ -149,11 +153,13 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                     guid: req.body.elements[0].elements[i].attributes.guid,
                                 });
                                 await Integrate1CAzyk.create(_object)
+                                //добавляем клиента в район
                                 district.client.push(_client._id)
                                 district.markModified('client');
                                 await district.save()
                             }
                             else {
+                                //обновляем клиента
                                 let _client = await ClientAzyk.findOne({_id: integrate1CAzyk.client});
                                 if(req.body.elements[0].elements[i].attributes.name)
                                     _client.name = req.body.elements[0].elements[i].attributes.name
@@ -164,15 +170,17 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                     req.body.elements[0].elements[i].attributes.name ? req.body.elements[0].elements[i].attributes.name : ''
                                 ]]
                                 await _client.save()
-
+                                //обновляем район
                                 let newDistrict = await DistrictAzyk.findOne({
                                     agent: agent.agent
                                 })
+                                //если клиент не добавлен в район
                                 if(newDistrict&&!newDistrict.client.toString().includes(_client._id.toString())){
                                     let oldDistrict = await DistrictAzyk.findOne({
                                         client: _client._id
                                     })
                                     if(oldDistrict){
+                                        //очищаем старый маршрут агента
                                         let objectAgentRouteAzyk = await AgentRouteAzyk.findOne({district: oldDistrict._id})
                                         if(objectAgentRouteAzyk){
                                             for(let i=0; i<7; i++) {
@@ -183,6 +191,7 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                             objectAgentRouteAzyk.markModified('clients');
                                             await objectAgentRouteAzyk.save()
                                         }
+                                        //очищаем старый район
                                         for(let i=0; i<oldDistrict.client.length; i++) {
                                             if(oldDistrict.client[i].toString()===_client._id.toString()){
                                                 oldDistrict.client.splice(i, 1)
@@ -192,7 +201,7 @@ router.post('/:pass/put/client', async (req, res, next) => {
                                         oldDistrict.markModified('client');
                                         await oldDistrict.save()
                                     }
-
+                                    //добавляем в новый район
                                     newDistrict.client.push(_client._id)
                                     newDistrict.markModified('client');
                                     await newDistrict.save()
@@ -232,7 +241,7 @@ router.post('/:pass/put/client', async (req, res, next) => {
 
 router.post('/:pass/put/employment', async (req, res, next) => {
     let organization = await OrganizationAzyk.findOne({pass: req.params.pass}).select('_id').lean()
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     try{
         if(req.body.elements[0].elements) {
             let position = ''
@@ -297,7 +306,7 @@ router.post('/:pass/put/employment', async (req, res, next) => {
 });
 
 router.get('/:pass/out/client', async (req, res, next) => {
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     try{
         await res.status(200);
         await res.end(await getSingleOutXMLClientAzyk(req.params.pass))
@@ -314,7 +323,7 @@ router.get('/:pass/out/client', async (req, res, next) => {
 });
 
 router.get('/:pass/out/returned', async (req, res, next) => {
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     try{
         await res.status(200);
         await res.end(await getSingleOutXMLReturnedAzyk(req.params.pass))
@@ -331,7 +340,7 @@ router.get('/:pass/out/returned', async (req, res, next) => {
 });
 
 router.get('/:pass/out/sales', async (req, res, next) => {
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     try{
         await res.status(200);
         await res.end(await getSingleOutXMLAzyk(req.params.pass))
@@ -348,7 +357,7 @@ router.get('/:pass/out/sales', async (req, res, next) => {
 });
 
 router.post('/:pass/put/returned/confirm', async (req, res, next) => {
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     try{
         if(req.body.elements[0].elements) {
             for (let i = 0; i < req.body.elements[0].elements.length; i++) {
@@ -370,7 +379,7 @@ router.post('/:pass/put/returned/confirm', async (req, res, next) => {
 });
 
 router.post('/:pass/put/sales/confirm', async (req, res, next) => {
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     try{
         if(req.body.elements[0].elements) {
             for (let i = 0; i < req.body.elements[0].elements.length; i++) {
@@ -392,7 +401,7 @@ router.post('/:pass/put/sales/confirm', async (req, res, next) => {
 });
 
 router.post('/:pass/put/client/confirm', async (req, res, next) => {
-    res.set('Content+Type', 'application/xml');
+    res.set('Content-Type', 'application/xml');
     try{
         if(req.body.elements[0].elements) {
             for (let i = 0; i < req.body.elements[0].elements.length; i++) {

@@ -1234,7 +1234,7 @@ const resolversMutation = {
     acceptOrders: async(parent, ctx, {user}) => {
         if(user.role==='admin'){
             let date = new Date()
-            date.setMinutes(date.getMinutes()-10)
+            ///date.setMinutes(date.getMinutes()-10)
             let organizations = await OrganizationAzyk.find({autoAcceptNight: true}).distinct('_id').lean()
             let orders = await InvoiceAzyk.find({
                 del: {$ne: 'deleted'},

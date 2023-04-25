@@ -46,10 +46,6 @@ const OrganizationAzykSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    autointegrate: {
-        type: Boolean,
-        default: false
-    },
     unite: {
         type: Boolean,
         default: true
@@ -62,6 +58,15 @@ const OrganizationAzykSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    pass: {
+        type: String,
+        default: ''
+    },
+    cities:  [String],
+    autoIntegrate: {
+        type: Boolean,
+        default: false
+    },
     autoAcceptAgent: {
         type: Boolean,
         default: false
@@ -70,11 +75,6 @@ const OrganizationAzykSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    pass: {
-        type: String,
-        default: ''
-    },
-    cities:  [String],
 }, {
     timestamps: true
 });
