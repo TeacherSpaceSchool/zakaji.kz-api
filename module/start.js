@@ -90,8 +90,8 @@ let startReminderClient = async () => {
 let start = async () => {
     await createAdmin();
     //await startClientRedis()
-    await reductionMerchandising()
-    await reductionRepairEquipment()
+    //await reductionMerchandising()
+    //await reductionRepairEquipment()
     await startResetUnloading()
     await startReminderClient();
     await startOutXMLShoroAzyk();
@@ -110,7 +110,7 @@ let start = async () => {
     //await reductionToOrganization()
     //await reductionToItem()
     //await reductionToUser()
-    await reductionToAgentRoute();
+    //await reductionToAgentRoute();
     //await reductionOutAdsXMLShoroAzyk()
     //await reductionToAds()
 }

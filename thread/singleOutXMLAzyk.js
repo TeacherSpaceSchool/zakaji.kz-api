@@ -18,7 +18,7 @@ const RELOAD_ORDER = 'RELOAD_ORDER';
 connectDB.connect()
 if(!isMainThread) {
     cron.schedule('1 3 * * *', async() => {
-        try{
+        try {
             //автоприем заказов
             let dateStart = new Date()
             dateStart.setHours(3, 0, 0, 0)

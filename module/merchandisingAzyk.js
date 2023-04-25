@@ -5,8 +5,8 @@ module.exports.reductionMerchandising = async() => {
     let date = new Date('2022-03-01T03:00:00.000Z')
     console.log('MerchandisingAzyk delete:', await MerchandisingAzyk.deleteMany({date: {$lte: date}}))
 
-    console.log('MerchandisingAzyk base64:', await MerchandisingAzyk.countDocuments({images: {'$regex': ';base64,', '$options': 'i'}}).lean())
     let merchandisings = await MerchandisingAzyk.find({images: {'$regex': ';base64,', '$options': 'i'}}).select('_id images').lean()
+    console.log('MerchandisingAzyk base64:', merchandisings.length)
     for(let i=0; i<merchandisings.length; i++) {
         for(let i1=0; i1<merchandisings[i].images.length; i1++) {
             await deleteFile(merchandisings[i].images[i1])
