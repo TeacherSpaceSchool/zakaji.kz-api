@@ -14,6 +14,7 @@ const BasketAzyk = require('../models/basketAzyk');
 const UserAzyk = require('../models/userAzyk');
 const AdsAzyk = require('../models/adsAzyk');
 const PlanAzyk = require('../models/planAzyk');
+const ModelsErrorAzyk = require('../models/errorAzyk');
 const { saveImage, saveFile, deleteFile, urlMain } = require('../module/const');
 
 const type = `
@@ -290,7 +291,14 @@ const resolversMutation = {
             if(unite!=undefined) object.unite = unite
             if(onlyDistrict!=undefined) object.onlyDistrict = onlyDistrict
             if(autoAcceptAgent!=undefined) object.autoAcceptAgent = autoAcceptAgent
-            if(autoAcceptNight!=undefined) object.autoAcceptNight = autoAcceptNight
+            if(autoAcceptNight!=undefined) {
+                let _object = new ModelsErrorAzyk({
+                    err: `autoAcceptNight: ${object.autoAcceptNight} => ${autoAcceptNight}`,
+                    path: 'setOrganization'
+                });
+                ModelsErrorAzyk.create(_object)
+                object.autoAcceptNight = autoAcceptNight
+            }
             if(dateDelivery!=undefined) object.dateDelivery = dateDelivery
             if(onlyIntegrate!=undefined) object.onlyIntegrate = onlyIntegrate
             if(priotiry!=undefined) object.priotiry = priotiry
