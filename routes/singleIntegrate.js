@@ -364,7 +364,7 @@ router.post('/:pass/put/returned/confirm', async (req, res, next) => {
                 await checkSingleOutXMLReturnedAzyk(req.params.pass, req.body.elements[0].elements[i].attributes.guid, req.body.elements[0].elements[i].attributes.exc)
             }
         }
-         await res.status(200);
+        await res.status(200);
         await res.end('success')
     } catch (err) {
         let _object = new ModelsErrorAzyk({
