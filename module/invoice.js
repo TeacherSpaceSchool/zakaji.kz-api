@@ -4,9 +4,9 @@ module.exports.reductionInvoices = async() => {
     /*let invoices = await Invoice.find({
         city: null
     })*/
-    console.log('reductionInvoices:', await Invoice.updateMany({city: null}, {city: 'Бишкек'}));
+    console.log('reductionInvoices:', await Invoice.updateMany({city: null}, {city: 'Алматы'}));
     /*for (let i = 0; i < invoices.length; i++) {
-        invoices[i].city = 'Бишкек'
+        invoices[i].city = 'Алматы'
         await invoices[i].save()
     }*/
 }

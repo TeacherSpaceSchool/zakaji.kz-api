@@ -915,7 +915,7 @@ const resolvers = {
     },
     statisticClientCity: async(parent, ctx, {user}) => {
         if(['admin'].includes(user.role)){
-            const cities = ['Бишкек', 'Кара-Балта', 'Токмок', 'Кочкор', 'Нарын', 'Боконбаева', 'Каракол', 'Чолпон-Ата', 'Балыкчы', 'Казарман', 'Талас', 'Жалал-Абад', 'Ош', 'Москва']
+            const cities = ['Алматы']
             let allCount = 0
             let count
             let data = []

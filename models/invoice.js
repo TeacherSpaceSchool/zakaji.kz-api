@@ -40,7 +40,7 @@ const InvoiceSchema = mongoose.Schema({
     },
     city: {
         type: String,
-        default: 'Бишкек'
+        default: 'Алматы'
     },
     number: String,
     guid: String,

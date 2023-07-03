@@ -6,7 +6,7 @@ module.exports.reductionSubBrands = async() => {
     })
     console.log('reductionSubBrands:',subBrands.length)
     for (let i = 0; i < subBrands.length; i++) {
-        subBrands[i].cities = ['Бишкек']
+        subBrands[i].cities = ['Алматы']
         await subBrands[i].save()
     }
 }

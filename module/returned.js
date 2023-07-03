@@ -11,7 +11,7 @@ module.exports.reductionReturneds = async() => {
         .lean()
     await Returned.deleteMany({organization: {$in: subBrands}});
     /*for (let i = 0; i < invoices.length; i++) {
-        invoices[i].city = 'Бишкек'
+        invoices[i].city = 'Алматы'
         await invoices[i].save()
     }*/
 }
