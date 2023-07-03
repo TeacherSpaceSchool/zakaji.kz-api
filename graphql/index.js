@@ -2,48 +2,48 @@ const { gql, ApolloServer,  } = require('apollo-server-express');
 const { RedisPubSub } = require('graphql-redis-subscriptions');
 const pubsub = new RedisPubSub();
 module.exports.pubsub = pubsub;
-const AdsAzyk = require('./adsAzyk');
-const FileAzyk = require('./fileAzyk');
-const DiscountClientAzyk = require('./discountClientAzyk');
-const IntegrateOutShoroAzyk = require('./integrateOutShoroAzyk');
-const DistributerAzyk = require('./distributerAzyk');
-const BlogAzyk = require('./blogAzyk');
-const SpecialPriceClientAzyk = require('./specialPriceClientAzyk');
-const OutXMLAdsAzyk = require('./outXMLAdsAzyk');
-const CategoryAzyk = require('./categoryAzyk');
-const SubCategoryAzyk = require('./subCategoryAzyk');
-const ReturnedAzyk = require('./returnedAzyk');
-const OrganizationAzyk = require('./organizationAzyk');
-const AgentHistoryGeoAzyk = require('./agentHistoryGeoAzyk');
-const ContactAzyk = require('./contactAzyk');
-const FaqAzyk = require('./faqAzyk');
-const MerchandisingAzyk = require('./merchandisingAzyk');
-const ClientAzyk = require('./clientAzyk');
-const EmploymentAzyk = require('./employmentAzyk');
-const AutoAzyk = require('./autoAzyk');
-const ItemAzyk = require('./itemAzyk');
-const SubBrand = require('./subBrandAzyk');
-const FormAzyk = require('./formAzyk');
-const BasketAzyk = require('./basketAzyk');
-const OrderAzyk = require('./orderAzyk');
-const EquipmentAzyk = require('./equipmentAzyk');
-const PassportAzyk = require('./passport');
-const RouteAzyk = require('./routeAzyk');
-const NotificationStatisticAzyk = require('./notificationStatisticAzyk');
-const StatisticAzyk = require('./statistic');
-const SubscriberAzyk = require('./subscriberAzyk');
-const AgentRouteAzyk = require('./agentRouteAzyk');
-const ReceiveDataAzyk = require('./receiveDataAzyk');
-const ReviewAzyk = require('./reviewAzyk');
-const ConnectionApplicationAzyk = require('./connectionApplicationAzyk');
-const LotteryAzyk = require('./lotteryAzyk');
-const DistrictAzyk = require('./districtAzyk');
-const Integrate1CAzyk = require('./integrate1CAzyk');
-const ErrorAzyk = require('./errorAzyk');
-const DeliveryDateAzyk = require('./deliveryDateAzyk');
+const Ads = require('./ads');
+const File = require('./file');
+const DiscountClient = require('./discountClient');
+const IntegrateOutShoro = require('./integrateOutShoro');
+const Distributer = require('./distributer');
+const Blog = require('./blog');
+const SpecialPriceClient = require('./specialPriceClient');
+const OutXMLAds = require('./outXMLAds');
+const Category = require('./category');
+const SubCategory = require('./subCategory');
+const Returned = require('./returned');
+const Organization = require('./organization');
+const AgentHistoryGeo = require('./agentHistoryGeo');
+const Contact = require('./contact');
+const Faq = require('./faq');
+const Merchandising = require('./merchandising');
+const Client = require('./client');
+const Employment = require('./employment');
+const Auto = require('./auto');
+const Item = require('./item');
+const SubBrand = require('./subBrand');
+const Form = require('./form');
+const Basket = require('./basket');
+const Order = require('./order');
+const Equipment = require('./equipment');
+const Passport = require('./passport');
+const Route = require('./route');
+const NotificationStatistic = require('./notificationStatistic');
+const Statistic = require('./statistic');
+const Subscriber = require('./subscriber');
+const AgentRoute = require('./agentRoute');
+const ReceiveData = require('./receiveData');
+const Review = require('./review');
+const ConnectionApplication = require('./connectionApplication');
+const Lottery = require('./lottery');
+const District = require('./district');
+const Integrate1C = require('./integrate1C');
+const Error = require('./error');
+const DeliveryDate = require('./deliveryDate');
 const { verifydeuserGQL } = require('../module/passport');
 const { GraphQLScalarType } = require('graphql');
-const ModelsErrorAzyk = require('../models/errorAzyk');
+const ModelsError = require('../models/error');
 
 const typeDefs = gql`
     scalar Date
@@ -62,130 +62,130 @@ const typeDefs = gql`
         url: String
         image: String
     }
-    ${DistrictAzyk.type}
-    ${ReviewAzyk.type}
-    ${ConnectionApplicationAzyk.type}
-    ${LotteryAzyk.type}
-    ${DeliveryDateAzyk.type}
-    ${ErrorAzyk.type}
-    ${AgentRouteAzyk.type}
-    ${DistributerAzyk.type}
-    ${Integrate1CAzyk.type}
-    ${AdsAzyk.type}
-    ${FileAzyk.type}
-    ${DiscountClientAzyk.type}
-    ${ReceiveDataAzyk.type}
-    ${IntegrateOutShoroAzyk.type}
-    ${SubscriberAzyk.type}
-    ${NotificationStatisticAzyk.type}
-    ${FaqAzyk.type}
-    ${MerchandisingAzyk.type}
-    ${AutoAzyk.type}
-    ${EquipmentAzyk.type}
-    ${ClientAzyk.type}
-    ${OrganizationAzyk.type}
-    ${AgentHistoryGeoAzyk.type}
-    ${BlogAzyk.type}
-    ${SpecialPriceClientAzyk.type}
-    ${OutXMLAdsAzyk.type}
-    ${PassportAzyk.type}
-    ${CategoryAzyk.type}
-    ${SubCategoryAzyk.type}
-    ${ReturnedAzyk.type}
-    ${EmploymentAzyk.type}
-    ${ItemAzyk.type}
+    ${District.type}
+    ${Review.type}
+    ${ConnectionApplication.type}
+    ${Lottery.type}
+    ${DeliveryDate.type}
+    ${Error.type}
+    ${AgentRoute.type}
+    ${Distributer.type}
+    ${Integrate1C.type}
+    ${Ads.type}
+    ${File.type}
+    ${DiscountClient.type}
+    ${ReceiveData.type}
+    ${IntegrateOutShoro.type}
+    ${Subscriber.type}
+    ${NotificationStatistic.type}
+    ${Faq.type}
+    ${Merchandising.type}
+    ${Auto.type}
+    ${Equipment.type}
+    ${Client.type}
+    ${Organization.type}
+    ${AgentHistoryGeo.type}
+    ${Blog.type}
+    ${SpecialPriceClient.type}
+    ${OutXMLAds.type}
+    ${Passport.type}
+    ${Category.type}
+    ${SubCategory.type}
+    ${Returned.type}
+    ${Employment.type}
+    ${Item.type}
     ${SubBrand.type}
-    ${FormAzyk.type}
-    ${ContactAzyk.type}
-    ${BasketAzyk.type}
-    ${OrderAzyk.type}
-    ${RouteAzyk.type}
-    ${StatisticAzyk.type}
+    ${Form.type}
+    ${Contact.type}
+    ${Basket.type}
+    ${Order.type}
+    ${Route.type}
+    ${Statistic.type}
     type Mutation {
-        ${Integrate1CAzyk.mutation}
-        ${DistrictAzyk.mutation}
-        ${ReviewAzyk.mutation}
-        ${ConnectionApplicationAzyk.mutation}
-        ${LotteryAzyk.mutation}
-        ${DeliveryDateAzyk.mutation}
-        ${ErrorAzyk.mutation}
-        ${AgentRouteAzyk.mutation}
-        ${DistributerAzyk.mutation}
-        ${AdsAzyk.mutation}
-        ${FileAzyk.mutation}
-        ${DiscountClientAzyk.mutation}
-        ${ReceiveDataAzyk.mutation}
-        ${IntegrateOutShoroAzyk.mutation}
-        ${SubscriberAzyk.mutation}
-        ${NotificationStatisticAzyk.mutation}
-        ${FaqAzyk.mutation}
-        ${MerchandisingAzyk.mutation}
-        ${AutoAzyk.mutation}
-        ${EquipmentAzyk.mutation}
-        ${ClientAzyk.mutation}
-        ${OrganizationAzyk.mutation}
-        ${AgentHistoryGeoAzyk.mutation}
-        ${CategoryAzyk.mutation}
-        ${SubCategoryAzyk.mutation}
-        ${ReturnedAzyk.mutation}
-        ${BlogAzyk.mutation}
-        ${SpecialPriceClientAzyk.mutation}
-        ${OutXMLAdsAzyk.mutation}
-        ${PassportAzyk.mutation}
-        ${EmploymentAzyk.mutation}
-        ${ItemAzyk.mutation}
+        ${Integrate1C.mutation}
+        ${District.mutation}
+        ${Review.mutation}
+        ${ConnectionApplication.mutation}
+        ${Lottery.mutation}
+        ${DeliveryDate.mutation}
+        ${Error.mutation}
+        ${AgentRoute.mutation}
+        ${Distributer.mutation}
+        ${Ads.mutation}
+        ${File.mutation}
+        ${DiscountClient.mutation}
+        ${ReceiveData.mutation}
+        ${IntegrateOutShoro.mutation}
+        ${Subscriber.mutation}
+        ${NotificationStatistic.mutation}
+        ${Faq.mutation}
+        ${Merchandising.mutation}
+        ${Auto.mutation}
+        ${Equipment.mutation}
+        ${Client.mutation}
+        ${Organization.mutation}
+        ${AgentHistoryGeo.mutation}
+        ${Category.mutation}
+        ${SubCategory.mutation}
+        ${Returned.mutation}
+        ${Blog.mutation}
+        ${SpecialPriceClient.mutation}
+        ${OutXMLAds.mutation}
+        ${Passport.mutation}
+        ${Employment.mutation}
+        ${Item.mutation}
         ${SubBrand.mutation}
-        ${FormAzyk.mutation}
-        ${ContactAzyk.mutation}
-        ${BasketAzyk.mutation}
-        ${OrderAzyk.mutation}
-        ${RouteAzyk.mutation}
-        ${StatisticAzyk.mutation}
+        ${Form.mutation}
+        ${Contact.mutation}
+        ${Basket.mutation}
+        ${Order.mutation}
+        ${Route.mutation}
+        ${Statistic.mutation}
     }
     type Query {
-        ${Integrate1CAzyk.query}
-        ${DistrictAzyk.query}
-        ${ReviewAzyk.query}
-        ${ConnectionApplicationAzyk.query}
-        ${LotteryAzyk.query}
-        ${DeliveryDateAzyk.query}
-        ${ErrorAzyk.query}
-        ${AgentRouteAzyk.query}
-        ${DistributerAzyk.query}
-        ${ClientAzyk.query}
-        ${FaqAzyk.query}
-        ${MerchandisingAzyk.query}
-        ${AutoAzyk.query}
-        ${EquipmentAzyk.query}
-        ${OrganizationAzyk.query}
-        ${AgentHistoryGeoAzyk.query}
-        ${AdsAzyk.query}
-        ${FileAzyk.query}
-        ${DiscountClientAzyk.query}
-        ${ReceiveDataAzyk.query}
-        ${IntegrateOutShoroAzyk.query}
-        ${SubscriberAzyk.query}
-        ${NotificationStatisticAzyk.query}
-        ${CategoryAzyk.query}
-        ${SubCategoryAzyk.query}
-        ${ReturnedAzyk.query}
-        ${BlogAzyk.query}
-        ${SpecialPriceClientAzyk.query}
-        ${OutXMLAdsAzyk.query}
-        ${PassportAzyk.query}
-        ${EmploymentAzyk.query}
-        ${ItemAzyk.query}
+        ${Integrate1C.query}
+        ${District.query}
+        ${Review.query}
+        ${ConnectionApplication.query}
+        ${Lottery.query}
+        ${DeliveryDate.query}
+        ${Error.query}
+        ${AgentRoute.query}
+        ${Distributer.query}
+        ${Client.query}
+        ${Faq.query}
+        ${Merchandising.query}
+        ${Auto.query}
+        ${Equipment.query}
+        ${Organization.query}
+        ${AgentHistoryGeo.query}
+        ${Ads.query}
+        ${File.query}
+        ${DiscountClient.query}
+        ${ReceiveData.query}
+        ${IntegrateOutShoro.query}
+        ${Subscriber.query}
+        ${NotificationStatistic.query}
+        ${Category.query}
+        ${SubCategory.query}
+        ${Returned.query}
+        ${Blog.query}
+        ${SpecialPriceClient.query}
+        ${OutXMLAds.query}
+        ${Passport.query}
+        ${Employment.query}
+        ${Item.query}
         ${SubBrand.query}
-        ${FormAzyk.query}
-        ${ContactAzyk.query}
-        ${BasketAzyk.query}
-        ${OrderAzyk.query}
-        ${RouteAzyk.query}
-        ${StatisticAzyk.query}
+        ${Form.query}
+        ${Contact.query}
+        ${Basket.query}
+        ${Order.query}
+        ${Route.query}
+        ${Statistic.query}
     }
     type Subscription {
-        ${OrderAzyk.subscription}
-        ${ReturnedAzyk.subscription}
+        ${Order.subscription}
+        ${Returned.subscription}
     }
 `;
 
@@ -207,90 +207,90 @@ const resolvers = {
         },
     }),
     Query: {
-        ...Integrate1CAzyk.resolvers,
-        ...DistrictAzyk.resolvers,
-        ...ReviewAzyk.resolvers,
-        ...ConnectionApplicationAzyk.resolvers,
-        ...LotteryAzyk.resolvers,
-        ...DeliveryDateAzyk.resolvers,
-        ...ErrorAzyk.resolvers,
-        ...AgentRouteAzyk.resolvers,
-        ...DistributerAzyk.resolvers,
-        ...FaqAzyk.resolvers,
-        ...MerchandisingAzyk.resolvers,
-        ...AutoAzyk.resolvers,
-        ...EquipmentAzyk.resolvers,
-        ...ClientAzyk.resolvers,
-        ...OrganizationAzyk.resolvers,
-        ...AgentHistoryGeoAzyk.resolvers,
-        ...BlogAzyk.resolvers,
-        ...SpecialPriceClientAzyk.resolvers,
-        ...OutXMLAdsAzyk.resolvers,
-        ...AdsAzyk.resolvers,
-        ...FileAzyk.resolvers,
-        ...DiscountClientAzyk.resolvers,
-        ...ReceiveDataAzyk.resolvers,
-        ...IntegrateOutShoroAzyk.resolvers,
-        ...SubscriberAzyk.resolvers,
-        ...NotificationStatisticAzyk.resolvers,
-        ...PassportAzyk.resolvers,
-        ...CategoryAzyk.resolvers,
-        ...EmploymentAzyk.resolvers,
-        ...SubCategoryAzyk.resolvers,
-        ...ReturnedAzyk.resolvers,
-        ...ItemAzyk.resolvers,
+        ...Integrate1C.resolvers,
+        ...District.resolvers,
+        ...Review.resolvers,
+        ...ConnectionApplication.resolvers,
+        ...Lottery.resolvers,
+        ...DeliveryDate.resolvers,
+        ...Error.resolvers,
+        ...AgentRoute.resolvers,
+        ...Distributer.resolvers,
+        ...Faq.resolvers,
+        ...Merchandising.resolvers,
+        ...Auto.resolvers,
+        ...Equipment.resolvers,
+        ...Client.resolvers,
+        ...Organization.resolvers,
+        ...AgentHistoryGeo.resolvers,
+        ...Blog.resolvers,
+        ...SpecialPriceClient.resolvers,
+        ...OutXMLAds.resolvers,
+        ...Ads.resolvers,
+        ...File.resolvers,
+        ...DiscountClient.resolvers,
+        ...ReceiveData.resolvers,
+        ...IntegrateOutShoro.resolvers,
+        ...Subscriber.resolvers,
+        ...NotificationStatistic.resolvers,
+        ...Passport.resolvers,
+        ...Category.resolvers,
+        ...Employment.resolvers,
+        ...SubCategory.resolvers,
+        ...Returned.resolvers,
+        ...Item.resolvers,
         ...SubBrand.resolvers,
-        ...FormAzyk.resolvers,
-        ...ContactAzyk.resolvers,
-        ...BasketAzyk.resolvers,
-        ...OrderAzyk.resolvers,
-        ...RouteAzyk.resolvers,
-        ...StatisticAzyk.resolvers,
+        ...Form.resolvers,
+        ...Contact.resolvers,
+        ...Basket.resolvers,
+        ...Order.resolvers,
+        ...Route.resolvers,
+        ...Statistic.resolvers,
     },
     Mutation: {
-        ...Integrate1CAzyk.resolversMutation,
-        ...AgentRouteAzyk.resolversMutation,
-        ...ReviewAzyk.resolversMutation,
-        ...ConnectionApplicationAzyk.resolversMutation,
-        ...LotteryAzyk.resolversMutation,
-        ...DistrictAzyk.resolversMutation,
-        ...DeliveryDateAzyk.resolversMutation,
-        ...ErrorAzyk.resolversMutation,
-        ...DistributerAzyk.resolversMutation,
-        ...FaqAzyk.resolversMutation,
-        ...MerchandisingAzyk.resolversMutation,
-        ...ClientAzyk.resolversMutation,
-        ...AutoAzyk.resolversMutation,
-        ...EquipmentAzyk.resolversMutation,
-        ...OrganizationAzyk.resolversMutation,
-        ...AgentHistoryGeoAzyk.resolversMutation,
-        ...CategoryAzyk.resolversMutation,
-        ...SubCategoryAzyk.resolversMutation,
-        ...ReturnedAzyk.resolversMutation,
-        ...BlogAzyk.resolversMutation,
-        ...SpecialPriceClientAzyk.resolversMutation,
-        ...OutXMLAdsAzyk.resolversMutation,
-        ...AdsAzyk.resolversMutation,
-        ...FileAzyk.resolversMutation,
-        ...DiscountClientAzyk.resolversMutation,
-        ...ReceiveDataAzyk.resolversMutation,
-        ...IntegrateOutShoroAzyk.resolversMutation,
-        ...SubscriberAzyk.resolversMutation,
-        ...NotificationStatisticAzyk.resolversMutation,
-        ...EmploymentAzyk.resolversMutation,
-        ...PassportAzyk.resolversMutation,
-        ...ItemAzyk.resolversMutation,
+        ...Integrate1C.resolversMutation,
+        ...AgentRoute.resolversMutation,
+        ...Review.resolversMutation,
+        ...ConnectionApplication.resolversMutation,
+        ...Lottery.resolversMutation,
+        ...District.resolversMutation,
+        ...DeliveryDate.resolversMutation,
+        ...Error.resolversMutation,
+        ...Distributer.resolversMutation,
+        ...Faq.resolversMutation,
+        ...Merchandising.resolversMutation,
+        ...Client.resolversMutation,
+        ...Auto.resolversMutation,
+        ...Equipment.resolversMutation,
+        ...Organization.resolversMutation,
+        ...AgentHistoryGeo.resolversMutation,
+        ...Category.resolversMutation,
+        ...SubCategory.resolversMutation,
+        ...Returned.resolversMutation,
+        ...Blog.resolversMutation,
+        ...SpecialPriceClient.resolversMutation,
+        ...OutXMLAds.resolversMutation,
+        ...Ads.resolversMutation,
+        ...File.resolversMutation,
+        ...DiscountClient.resolversMutation,
+        ...ReceiveData.resolversMutation,
+        ...IntegrateOutShoro.resolversMutation,
+        ...Subscriber.resolversMutation,
+        ...NotificationStatistic.resolversMutation,
+        ...Employment.resolversMutation,
+        ...Passport.resolversMutation,
+        ...Item.resolversMutation,
         ...SubBrand.resolversMutation,
-        ...FormAzyk.resolversMutation,
-        ...ContactAzyk.resolversMutation,
-        ...BasketAzyk.resolversMutation,
-        ...OrderAzyk.resolversMutation,
-        ...RouteAzyk.resolversMutation,
-        ...StatisticAzyk.resolversMutation,
+        ...Form.resolversMutation,
+        ...Contact.resolversMutation,
+        ...Basket.resolversMutation,
+        ...Order.resolversMutation,
+        ...Route.resolversMutation,
+        ...Statistic.resolversMutation,
     },
     Subscription: {
-        ...OrderAzyk.resolversSubscription,
-        ...ReturnedAzyk.resolversSubscription
+        ...Order.resolversSubscription,
+        ...Returned.resolversSubscription
     }
 };
 
@@ -331,11 +331,11 @@ const run = (app)=>{
         formatError: (err) => {
             console.error(err)
 
-            let _object = new ModelsErrorAzyk({
+            let _object = new ModelsError({
                 err: `gql: ${err.message}`,
                 path: JSON.stringify(err.path)
             });
-            ModelsErrorAzyk.create(_object)
+            ModelsError.create(_object)
 
             return err;
         }

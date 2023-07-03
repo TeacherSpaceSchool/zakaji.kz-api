@@ -1,18 +1,18 @@
-const SubscriberAzyk = require('../models/subscriberAzyk');
-const NotificationStatisticAzyk = require('../models/notificationStatisticAzyk');
+const Subscriber = require('../models/subscriber');
+const NotificationStatistic = require('../models/notificationStatistic');
 const q = require('q');
 const webPush = require('web-push');
-const keys = require((process.env.URL).trim()==='https://azyk.store'?'./../config/keys_prod':'./../config/keys_dev');
+const keys = require((process.env.URL).trim()!=='http://localhost'?'./../config/keys_prod':'./../config/keys_dev');
 
 module.exports.sendWebPush = async({title, message, tag, url, icon, user}) => {
     const payload = {
         title: title?title:title,
         message: message?message:message,
-        url: url?url:'https://azyk.store',
-        icon: icon?icon:'https://azyk.store/static/192x192.png',
-        tag: tag?tag:'AZYK.STORE'
+        url: url?url:'https://zakaji.kz',
+        icon: icon?icon:'https://zakaji.kz/static/192x192.png',
+        tag: tag?tag:'ZAKAJI.KZ'
     };
-    let _object = new NotificationStatisticAzyk({
+    let _object = new NotificationStatistic({
         tag: payload.tag,
         url: payload.url,
         icon: payload.icon,
@@ -21,16 +21,16 @@ module.exports.sendWebPush = async({title, message, tag, url, icon, user}) => {
         delivered: 0,
         failed: 0,
     });
-    _object = await NotificationStatisticAzyk.create(_object)
+    _object = await NotificationStatistic.create(_object)
     payload._id = _object._id
     if(user==='all'){
-        SubscriberAzyk.find({}, (err, subscriptions) => {
+        Subscriber.find({}, (err, subscriptions) => {
             if (err) {
                 console.error('Error occurred while getting subscriptions');
             } else {
-                let parallelSubscriberAzykCalls = subscriptions.map((subscription) => {
+                let parallelSubscriberCalls = subscriptions.map((subscription) => {
                     return new Promise((resolve, reject) => {
-                        const pushSubscriberAzyk = {
+                        const pushSubscriber = {
                             endpoint: subscription.endpoint,
                             keys: {
                                 p256dh: subscription.keys.p256dh,
@@ -41,14 +41,14 @@ module.exports.sendWebPush = async({title, message, tag, url, icon, user}) => {
                         const pushPayload = JSON.stringify(payload);
                         const pushOptions = {
                             vapidDetails: {
-                                subject: 'https://azyk.store',
+                                subject: 'https://zakaji.kz',
                                 privateKey: keys.privateKey,
                                 publicKey: keys.publicKey
                             },
                             headers: {}
                         };
                         webPush.sendNotification(
-                            pushSubscriberAzyk,
+                            pushSubscriber,
                             pushPayload,
                             pushOptions
                         ).then((value) => {
@@ -66,7 +66,7 @@ module.exports.sendWebPush = async({title, message, tag, url, icon, user}) => {
                         });
                     });
                 });
-                q.allSettled(parallelSubscriberAzykCalls).then(async(pushResults) => {
+                q.allSettled(parallelSubscriberCalls).then(async(pushResults) => {
                     try{
                         let delivered = 0;
                         let failed = 0;
@@ -87,13 +87,13 @@ module.exports.sendWebPush = async({title, message, tag, url, icon, user}) => {
         }).lean();
     }
     else {
-        SubscriberAzyk.find({user: user}, (err, subscriptions) => {
+        Subscriber.find({user: user}, (err, subscriptions) => {
             if (err) {
                 console.error('Error occurred while getting subscriptions');
             } else {
-                let parallelSubscriberAzykCalls = subscriptions.map((subscription) => {
+                let parallelSubscriberCalls = subscriptions.map((subscription) => {
                     return new Promise((resolve, reject) => {
-                        const pushSubscriberAzyk = {
+                        const pushSubscriber = {
                             endpoint: subscription.endpoint,
                             keys: {
                                 p256dh: subscription.keys.p256dh,
@@ -104,14 +104,14 @@ module.exports.sendWebPush = async({title, message, tag, url, icon, user}) => {
                         const pushPayload = JSON.stringify(payload);
                         const pushOptions = {
                             vapidDetails: {
-                                subject: 'https://azyk.store',
+                                subject: 'https://zakaji.kz',
                                 privateKey: keys.privateKey,
                                 publicKey: keys.publicKey
                             },
                             headers: {}
                         };
                         webPush.sendNotification(
-                            pushSubscriberAzyk,
+                            pushSubscriber,
                             pushPayload,
                             pushOptions
                         ).then((value) => {
@@ -129,7 +129,7 @@ module.exports.sendWebPush = async({title, message, tag, url, icon, user}) => {
                         });
                     });
                 });
-                q.allSettled(parallelSubscriberAzykCalls).then(async (pushResults) => {
+                q.allSettled(parallelSubscriberCalls).then(async (pushResults) => {
                     try{
                         let delivered = 0;
                         let failed = 0;

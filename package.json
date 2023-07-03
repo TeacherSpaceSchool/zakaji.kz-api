@@ -1,11 +1,11 @@
 {
-  "name": "azyk-api",
+  "name": "zakaji.kz-api",
   "version": "0.0.0",
   "private": true,
   "scripts": {
     "develop": "set URL=http://localhost&& nodemon ./bin/develop",
     "start": "set NODE_ENV=production&& set URL=http://localhost&& node ./bin/www",
-    "start-on-server": "NODE_ENV=production URL=https://azyk.store node ./bin/www",
+    "start-on-server": "NODE_ENV=production URL=https://zakaji.kz node ./bin/www",
     "test": "mocha test/*.js"
   },
   "dependencies": {

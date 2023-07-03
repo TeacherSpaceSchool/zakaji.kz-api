@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const randomstring = require('randomstring');
-const SubscriberAzyk = require('../models/subscriberAzyk');
-const ClientAzyk = require('../models/clientAzyk');
+const Subscriber = require('../models/subscriber');
+const Client = require('../models/client');
 const passportEngine = require('../module/passport');
-const ModelsErrorAzyk = require('../models/errorAzyk');
+const ModelsError = require('../models/error');
 
 router.post('/register', async (req, res) => {
     await passportEngine.getuser(req, res, async (user)=> {
         try {
             let subscriptionModel;
             let number = req.body.number
-            subscriptionModel = await SubscriberAzyk.findOne({$or: [{number: number}, {endpoint: req.body.endpoint}]})
+            subscriptionModel = await Subscriber.findOne({$or: [{number: number}, {endpoint: req.body.endpoint}]})
             if (subscriptionModel) {
                 if (user) subscriptionModel.user = user._id
                 subscriptionModel.endpoint = req.body.endpoint
@@ -19,9 +19,9 @@ router.post('/register', async (req, res) => {
             }
             else {
                 number = randomstring.generate({length: 20, charset: 'numeric'});
-                while (await SubscriberAzyk.findOne({number: number}).select('_id').lean())
+                while (await Subscriber.findOne({number: number}).select('_id').lean())
                     number = randomstring.generate({length: 20, charset: 'numeric'});
-                subscriptionModel = new SubscriberAzyk({
+                subscriptionModel = new Subscriber({
                     endpoint: req.body.endpoint,
                     keys: req.body.keys,
                     number: number,
@@ -29,7 +29,7 @@ router.post('/register', async (req, res) => {
                 if (user) subscriptionModel.user = user._id
             }
             if (user.role === 'client') {
-                let client = await ClientAzyk.findOne({user: user._id})
+                let client = await Client.findOne({user: user._id})
                 client.notification = true
                 await client.save()
             }
@@ -45,11 +45,11 @@ router.post('/register', async (req, res) => {
                 }
             });
         } catch (err) {
-            let _object = new ModelsErrorAzyk({
+            let _object = new ModelsError({
                 err: err.message,
                 path: 'register subscribe'
             });
-            ModelsErrorAzyk.create(_object)
+            ModelsError.create(_object)
             console.error(err)
             res.status(501);
             res.end('error')
@@ -59,9 +59,9 @@ router.post('/register', async (req, res) => {
 
 router.post('/unregister', async (req, res) => {
     try{
-        let subscriptionModel = await SubscriberAzyk.findOne({number: req.body.number}).populate({ path: 'user'})
-        if(subscriptionModel&&subscriptionModel.user&&subscriptionModel.user.role==='client'&&(await SubscriberAzyk.find({user: subscriptionModel.user._id}).select('_id').lean()).length===1){
-            let client = await ClientAzyk.findOne({user: subscriptionModel.user._id})
+        let subscriptionModel = await Subscriber.findOne({number: req.body.number}).populate({ path: 'user'})
+        if(subscriptionModel&&subscriptionModel.user&&subscriptionModel.user.role==='client'&&(await Subscriber.find({user: subscriptionModel.user._id}).select('_id').lean()).length===1){
+            let client = await Client.findOne({user: subscriptionModel.user._id})
             if(client) {
                 client.notification = false
                 await client.save()
@@ -70,11 +70,11 @@ router.post('/unregister', async (req, res) => {
             await subscriptionModel.save()
         }
     } catch (err) {
-        let _object = new ModelsErrorAzyk({
+        let _object = new ModelsError({
             err: err.message,
             path: 'unregister subscribe'
         });
-        ModelsErrorAzyk.create(_object)
+        ModelsError.create(_object)
         console.error(err)
         res.status(501);
         res.end('error')
@@ -83,21 +83,21 @@ router.post('/unregister', async (req, res) => {
 
 router.post('/delete', async (req, res) => {
     try{
-        let subscriptionModel = await SubscriberAzyk.findOne({number: req.body.number}).populate({ path: 'user'}).lean()
-        if(subscriptionModel&&subscriptionModel.user&&subscriptionModel.user.role==='client'&&(await SubscriberAzyk.find({user: subscriptionModel.user._id}).select('_id').lean()).length===1){
-            let client = await ClientAzyk.findOne({user: subscriptionModel.user._id})
+        let subscriptionModel = await Subscriber.findOne({number: req.body.number}).populate({ path: 'user'}).lean()
+        if(subscriptionModel&&subscriptionModel.user&&subscriptionModel.user.role==='client'&&(await Subscriber.find({user: subscriptionModel.user._id}).select('_id').lean()).length===1){
+            let client = await Client.findOne({user: subscriptionModel.user._id})
             if(client) {
                 client.notification = false
                 await client.save()
             }
         }
-        await SubscriberAzyk.deleteMany({number: req.body.number})
+        await Subscriber.deleteMany({number: req.body.number})
     } catch (err) {
-        let _object = new ModelsErrorAzyk({
+        let _object = new ModelsError({
             err: err.message,
             path: 'delete subscribe'
         });
-        ModelsErrorAzyk.create(_object)
+        ModelsError.create(_object)
         console.error(err)
         res.status(501);
         res.end('error')
@@ -106,7 +106,7 @@ router.post('/delete', async (req, res) => {
 
 router.get('/check', async(req, res) => {
     try{
-        await SubscriberAzyk.findOne()
+        await Subscriber.findOne()
         res.status(200);
         res.end('ok')
     } catch (err) {

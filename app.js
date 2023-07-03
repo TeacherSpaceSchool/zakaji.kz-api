@@ -10,7 +10,6 @@ const usersRouter = require('./routes/users');
 const passportEngine = require('./module/passport');
 const cors = require('cors');
 const adminRouter = require('./routes/admin');
-const os = require('os');
 const compression = require('compression');
 const bodyParser = require('body-parser');
 let graphql  = require('./graphql/index');

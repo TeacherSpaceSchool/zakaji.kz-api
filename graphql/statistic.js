@@ -1,23 +1,18 @@
-//5e3fc975934d024d86c66bd9
-//7 931 829 сом
-//5 682 шт
-//Иязов Адилет 0 702 533 146
-//Баялиев Адилет
-const InvoiceAzyk = require('../models/invoiceAzyk');
-const Integrate1CAzyk = require('../models/integrate1CAzyk');
-const OrderAzyk = require('../models/orderAzyk');
-const ReturnedAzyk = require('../models/returnedAzyk');
-const ClientAzyk = require('../models/clientAzyk');
-const OrganizationAzyk = require('../models/organizationAzyk');
-const MerchandisingAzyk = require('../models/merchandisingAzyk');
-const ContactAzyk = require('../models/contactAzyk');
-const EmploymentAzyk = require('../models/employmentAzyk');
-const DistrictAzyk = require('../models/districtAzyk');
-const DistributerAzyk = require('../models/distributerAzyk');
-const AgentRouteAzyk = require('../models/agentRouteAzyk');
-const ItemAzyk = require('../models/itemAzyk');
-const UserAzyk = require('../models/userAzyk');
-const AdsAzyk = require('../models/adsAzyk');
+const Invoice = require('../models/invoice');
+const Integrate1C = require('../models/integrate1C');
+const Order = require('../models/order');
+const Returned = require('../models/returned');
+const Client = require('../models/client');
+const Organization = require('../models/organization');
+const Merchandising = require('../models/merchandising');
+const Contact = require('../models/contact');
+const Employment = require('../models/employment');
+const District = require('../models/district');
+const Distributer = require('../models/distributer');
+const AgentRoute = require('../models/agentRoute');
+const Item = require('../models/item');
+const User = require('../models/user');
+const Ads = require('../models/ads');
 const {pdDDMMYYYY, statsCollection} = require('../module/const');
 const ExcelJS = require('exceljs');
 const randomstring = require('randomstring');
@@ -26,9 +21,9 @@ const fs = require('fs');
 const path = require('path');
 const { urlMain, saveFile, deleteFile, weekDay, pdDDMMYYHHMM, pdHHMM, checkFloat, month, checkInt } = require('../module/const');
 const readXlsxFile = require('read-excel-file/node');
-const AgentHistoryGeoAzyk = require('../models/agentHistoryGeoAzyk');
-const AutoAzyk = require('../models/autoAzyk');
-const SubCategoryAzyk = require('../models/subCategoryAzyk');
+const AgentHistoryGeo = require('../models/agentHistoryGeo');
+const Auto = require('../models/auto');
+const SubCategory = require('../models/subCategory');
 const mongoose = require('mongoose');
 
 const type = `
@@ -73,9 +68,9 @@ const query = `
     statisticOrder(company: String, dateStart: Date, dateType: String, online: Boolean, city: String): Statistic
     statisticSubBrand(company: String, dateStart: Date, dateType: String, online: Boolean, city: String): Statistic
     statisticHours(organization: ID!, dateStart: Date, dateType: String, city: String, type: String!): Statistic
-    statisticAzykStoreOrder(company: ID, filter: String, dateStart: Date, dateType: String, city: String): Statistic
-    statisticAzykStoreAgents(company: ID, dateStart: Date, dateType: String, filter: String, city: String): Statistic
-    statisticAzykStoreAgent(agent: ID!, dateStart: Date, dateType: String): Statistic
+    statisticZakajiKzOrder(company: ID, filter: String, dateStart: Date, dateType: String, city: String): Statistic
+    statisticZakajiKzAgents(company: ID, dateStart: Date, dateType: String, filter: String, city: String): Statistic
+    statisticZakajiKzAgent(agent: ID!, dateStart: Date, dateType: String): Statistic
     statisticClient(client: ID!, dateStart: Date, dateType: String, online: Boolean): Statistic
     statisticGeoOrder(organization: ID!, dateStart: Date, city: String): [[String]]
     statisticDistributer(distributer: ID!, organization: ID, dateStart: Date, dateType: String, type: String, city: String): Statistic
@@ -108,7 +103,7 @@ const resolvers = {
             if(type!=='отличая от 1С') {
                 let statistic = [];
                 let sortStatistic = {};
-                let data = await Integrate1CAzyk.find(
+                let data = await Integrate1C.find(
                     {
                         organization: organization,
                         client: {$ne: null},
@@ -182,7 +177,7 @@ const resolvers = {
                 let statistic = [];
                 let problem;
                 for (let i = 0; i < rows.length; i++) {
-                    let integrate1CAzyk = await Integrate1CAzyk.findOne({
+                    let integrate1C = await Integrate1C.findOne({
                         organization: organization,
                         guid: rows[i][0]
                     })
@@ -191,13 +186,13 @@ const resolvers = {
                             path: 'client'
                         })
                         .lean()
-                    if(integrate1CAzyk&&integrate1CAzyk.client.address[0]&&integrate1CAzyk.client.address[0][2]) {
+                    if(integrate1C&&integrate1C.client.address[0]&&integrate1C.client.address[0][2]) {
                         let market = rows[i][1].toString().toLowerCase()
                         while (market.includes(' '))
                             market = market.replace(' ', '')
                         while (market.includes('-'))
                             market = market.replace('-', '')
-                        let market1 = integrate1CAzyk.client.address[0][2].toLowerCase()
+                        let market1 = integrate1C.client.address[0][2].toLowerCase()
                         while (market1.includes(' '))
                             market1 = market1.replace(' ', '')
                         while (market1.includes('-'))
@@ -206,9 +201,9 @@ const resolvers = {
                         if (problem) {
                             statistic.push({
                                 _id: i, data: [
-                                    integrate1CAzyk.guid,
-                                    //integrate1CAzyk.client.address[0][2],
-                                    `${integrate1CAzyk.client.address && integrate1CAzyk.client.address[0] ? `${integrate1CAzyk.client.address[0][2] ? `${integrate1CAzyk.client.address[0][2]}, ` : ''}${integrate1CAzyk.client.address[0][0]}` : ''}`,
+                                    integrate1C.guid,
+                                    //integrate1C.client.address[0][2],
+                                    `${integrate1C.client.address && integrate1C.client.address[0] ? `${integrate1C.client.address[0][2] ? `${integrate1C.client.address[0][2]}, ` : ''}${integrate1C.client.address[0][0]}` : ''}`,
                                     rows[i][1]
                                 ]
                             })
@@ -217,7 +212,7 @@ const resolvers = {
                 }
                 await deleteFile(filename)
                 return {
-                    columns: ['GUID', 'AZYK.STORE', '1C'],
+                    columns: ['GUID', 'ZAKAJI.KZ', '1C'],
                     row: statistic
                 };
 
@@ -227,7 +222,7 @@ const resolvers = {
     checkAgentRoute: async(parent, { agentRoute }, {user}) => {
         if(['admin', 'суперорганизация'].includes(user.role)){
             let problem = []
-            let data = await AgentRouteAzyk.findOne(
+            let data = await AgentRoute.findOne(
                 {
                     _id: agentRoute
                 }
@@ -288,7 +283,7 @@ const resolvers = {
             let problem = ''
             let repeat = 0
             let noSync = 0
-                let data = await InvoiceAzyk.find(
+                let data = await Invoice.find(
                 {
                     $and: [
                         {createdAt: {$gte: yesterday}},
@@ -352,18 +347,18 @@ const resolvers = {
             let excludedAgents = []
             let clients = {}
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({user: {$in: excludedAgents}}).distinct('_id').lean()
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({user: {$in: excludedAgents}}).distinct('_id').lean()
             }
             if(dateStart){
                 let organizations
                 if(!company){
-                    organizations = await OrganizationAzyk.find({...city?{cities: city}:{}})
+                    organizations = await Organization.find({...city?{cities: city}:{}})
                         .select('_id name')
                         .lean()
                 }
                 else {
-                    organizations = await OrganizationAzyk.find({_id: company})
+                    organizations = await Organization.find({_id: company})
                         .select('_id name')
                         .lean()
                 }
@@ -379,7 +374,7 @@ const resolvers = {
                                     label: organizations[i].name,
                                     data: []
                                 }
-                            let data = await InvoiceAzyk.find(
+                            let data = await Invoice.find(
                                 {
                                     $and: [
                                         {createdAt: {$gte: dateStart}},
@@ -438,7 +433,7 @@ const resolvers = {
                                     label: organizations[i].name,
                                     data: []
                                 }
-                            let data = await InvoiceAzyk.find(
+                            let data = await Invoice.find(
                                 {
                                     $and: [
                                         {createdAt: {$gte: dateStart}},
@@ -487,7 +482,7 @@ const resolvers = {
                                     label: organizations[i1].name,
                                     data: []
                                 }
-                            let data = await InvoiceAzyk.find(
+                            let data = await Invoice.find(
                                 {
                                     $and: [
                                         {createdAt: {$gte: dateStart}},
@@ -536,7 +531,7 @@ const resolvers = {
                                     label: organizations[i1].name,
                                     data: []
                                 }
-                            let data = await InvoiceAzyk.find(
+                            let data = await Invoice.find(
                                 {
                                     $and: [
                                         {createdAt: {$gte: dateStart}},
@@ -595,8 +590,8 @@ const resolvers = {
 
             let excludedAgents = []
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({
                     user: {$in: excludedAgents},
                     ...(organization?{organization: organization}:{})
                 }).distinct('_id').lean()
@@ -604,7 +599,7 @@ const resolvers = {
             let statistic = {}
             let orderClient = []
             let orderByClient = {}
-            let data =  await InvoiceAzyk.aggregate(
+            let data =  await Invoice.aggregate(
                 [
                     {
                         $match:{
@@ -632,7 +627,7 @@ const resolvers = {
                 if(!orderByClient[data[i]._id.toString()])
                     orderByClient[data[i]._id.toString()] = data[i]
             }
-            data = await ClientAzyk.find(
+            data = await Client.find(
                 {
                     ...(city?{city: city}:{}),
                     del: {$ne: 'deleted'},
@@ -734,13 +729,13 @@ const resolvers = {
             let allProfit = 0
             let allReturned = 0
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({
                     user: {$in: excludedAgents},
                     ...(organization?{organization: organization}:{})
                 }).distinct('_id').lean()
             }
-            let data = await InvoiceAzyk.find(
+            let data = await Invoice.find(
                 {
                     ...city?{city: city}:{},
                     $and: [
@@ -849,46 +844,46 @@ const resolvers = {
             let stats
             let data = []
             let collections = [
-                {name: 'Маршрут агента', collection: '../models/agentRouteAzyk'},
-                {name: 'Акции', collection: '../models/adsAzyk'},
-                {name: 'История посещения агентов',collection: '../models/agentHistoryGeoAzyk'},
-                {name: 'Маршрут агента', collection: '../models/agentRouteAzyk'},
-                {name: 'Транспорт', collection: '../models/autoAzyk'},
-                {name: 'Корзина', collection: '../models/basketAzyk'},
-                {name: 'Блог', collection: '../models/blogAzyk'},
-                {name: 'Категории', collection: '../models/categoryAzyk'},
-                {name: 'Клиенты', collection: '../models/clientAzyk'},
-                {name: 'Контакты', collection: '../models/contactAzyk'},
-                {name: 'Дни доставки', collection: '../models/deliveryDateAzyk'},
-                {name: 'Скидка', collection: '../models/discountClientAzyk'},
-                {name: 'Дистрибьютор', collection: '../models/distributerAzyk'},
-                {name: 'Районы', collection: '../models/districtAzyk'},
-                {name: 'Сотрудники', collection: '../models/employmentAzyk'},
-                {name: 'Ошибка', collection: '../models/errorAzyk'},
-                {name: 'FAQ', collection: '../models/faqAzyk'},
-                {name: 'Формы', collection: '../models/form/formAzyk'},
-                {name: 'Шаблоны форм', collection: '../models/form/templateFormAzyk'},
-                {name: 'История заказов', collection: '../models/historyOrderAzyk'},
-                {name: 'История возратов', collection: '../models/historyReturnedAzyk'},
-                {name: 'Интеграция 1С', collection: '../models/integrate1CAzyk'},
-                {name: 'Накладные', collection: '../models/invoiceAzyk'},
-                {name: 'Товары', collection: '../models/itemAzyk'},
-                {name: 'Лотерея', collection: '../models/lotteryAzyk'},
-                {name: 'Мерчендайзинг', collection: '../models/merchandisingAzyk'},
-                {name: 'Уведомления', collection: '../models/notificationStatisticAzyk'},
-                {name: 'Заказы', collection: '../models/orderAzyk'},
-                {name: 'Организации', collection: '../models/organizationAzyk'},
-                {name: 'Принятая интеграция', collection: '../models/receivedDataAzyk'},
-                {name: 'Ремонт инвентаря', collection: '../models/repairEquipmentAzyk'},
-                {name: 'Возвраты', collection: '../models/returnedAzyk'},
-                {name: 'Отзывы', collection: '../models/reviewAzyk'},
-                {name: 'Маршруты', collection: '../models/routeAzyk'},
-                {name: 'Акционая интеграция', collection: '../models/singleOutXMLAdsAzyk'},
-                {name: 'Выгрузка заказов', collection: '../models/singleOutXMLAzyk'},
-                {name: 'Выгрузка вощвратов', collection: '../models/singleOutXMLReturnedAzyk'},
-                {name: 'Подкатегории', collection: '../models/subCategoryAzyk'},
-                {name: 'Подписчики', collection: '../models/subscriberAzyk'},
-                {name: 'Пользователи', collection: '../models/userAzyk'}
+                {name: 'Маршрут агента', collection: '../models/agentRoute'},
+                {name: 'Акции', collection: '../models/ads'},
+                {name: 'История посещения агентов',collection: '../models/agentHistoryGeo'},
+                {name: 'Маршрут агента', collection: '../models/agentRoute'},
+                {name: 'Транспорт', collection: '../models/auto'},
+                {name: 'Корзина', collection: '../models/basket'},
+                {name: 'Блог', collection: '../models/blog'},
+                {name: 'Категории', collection: '../models/category'},
+                {name: 'Клиенты', collection: '../models/client'},
+                {name: 'Контакты', collection: '../models/contact'},
+                {name: 'Дни доставки', collection: '../models/deliveryDate'},
+                {name: 'Скидка', collection: '../models/discountClient'},
+                {name: 'Дистрибьютор', collection: '../models/distributer'},
+                {name: 'Районы', collection: '../models/district'},
+                {name: 'Сотрудники', collection: '../models/employment'},
+                {name: 'Ошибка', collection: '../models/error'},
+                {name: 'FAQ', collection: '../models/faq'},
+                {name: 'Формы', collection: '../models/form/form'},
+                {name: 'Шаблоны форм', collection: '../models/form/templateForm'},
+                {name: 'История заказов', collection: '../models/historyOrder'},
+                {name: 'История возратов', collection: '../models/historyReturned'},
+                {name: 'Интеграция 1С', collection: '../models/integrate1C'},
+                {name: 'Накладные', collection: '../models/invoice'},
+                {name: 'Товары', collection: '../models/item'},
+                {name: 'Лотерея', collection: '../models/lottery'},
+                {name: 'Мерчендайзинг', collection: '../models/merchandising'},
+                {name: 'Уведомления', collection: '../models/notificationStatistic'},
+                {name: 'Заказы', collection: '../models/order'},
+                {name: 'Организации', collection: '../models/organization'},
+                {name: 'Принятая интеграция', collection: '../models/receivedData'},
+                {name: 'Ремонт инвентаря', collection: '../models/repairEquipment'},
+                {name: 'Возвраты', collection: '../models/returned'},
+                {name: 'Отзывы', collection: '../models/review'},
+                {name: 'Маршруты', collection: '../models/route'},
+                {name: 'Акционая интеграция', collection: '../models/singleOutXMLAds'},
+                {name: 'Выгрузка заказов', collection: '../models/singleOutXML'},
+                {name: 'Выгрузка вощвратов', collection: '../models/singleOutXMLReturned'},
+                {name: 'Подкатегории', collection: '../models/subCategory'},
+                {name: 'Подписчики', collection: '../models/subscriber'},
+                {name: 'Пользователи', collection: '../models/user'}
             ]
             for(let i=0; i<collections.length; i++){
                 stats = await statsCollection(collections[i].collection)
@@ -924,9 +919,9 @@ const resolvers = {
             let allCount = 0
             let count
             let data = []
-            let clients = await UserAzyk.find({role: 'client', status: 'active'}).distinct('_id').lean()
+            let clients = await User.find({role: 'client', status: 'active'}).distinct('_id').lean()
             for(let i=0; i<cities.length; i++){
-                count = await ClientAzyk.countDocuments({
+                count = await Client.countDocuments({
                     user: {$in: clients},
                     del: {$ne: 'deleted'},
                     city: cities[i]
@@ -972,14 +967,14 @@ const resolvers = {
             let allConsignment = 0
             let statistic = {}
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({
                     user: {$in: excludedAgents},
                     ...(organization?{organization: organization}:{})
                 }).distinct('_id').lean()
             }
             if(!organization){
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         ...city?{city: city}:{},
                         $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt: dateEnd}}],
@@ -1026,7 +1021,7 @@ const resolvers = {
                 }
             }
             else {
-                data = await DistrictAzyk.find({organization: organization})
+                data = await District.find({organization: organization})
                     .select('client _id name')
                     .lean()
                 for(let i=0; i<data.length; i++) {
@@ -1034,7 +1029,7 @@ const resolvers = {
                         districts[data[i].client[i1].toString()] = data[i]
                     }
                 }
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         ...city?{city: city}:{},
                         $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt: dateEnd}}],
@@ -1146,11 +1141,11 @@ const resolvers = {
             let consignmentPriceAll = 0
             let completAll = 0
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({user: {$in: excludedAgents}}).distinct('_id').lean()
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({user: {$in: excludedAgents}}).distinct('_id').lean()
             }
             let statistic = {}
-            let data = await InvoiceAzyk.find(
+            let data = await Invoice.find(
                 {
                     $and: [
                         dateStart?{createdAt: {$gte: dateStart}}:{},
@@ -1258,11 +1253,11 @@ const resolvers = {
             let allConsignment = 0
             let completAll = []
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({user: {$in: excludedAgents}}).distinct('_id').lean()
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({user: {$in: excludedAgents}}).distinct('_id').lean()
             }
-            let adss = await AdsAzyk.find({ ...(company==='all'?{}:{ organization: company }),}).distinct('_id').lean()
-            let data = await InvoiceAzyk.find(
+            let adss = await Ads.find({ ...(company==='all'?{}:{ organization: company }),}).distinct('_id').lean()
+            let data = await Invoice.find(
                 {
                     $and: [
                         dateStart?{createdAt: {$gte: dateStart}}:{},
@@ -1379,10 +1374,10 @@ const resolvers = {
             let completAll = []
 
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({user: {$in: excludedAgents}}).distinct('_id').lean()
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({user: {$in: excludedAgents}}).distinct('_id').lean()
             }
-            let data = await InvoiceAzyk.find(
+            let data = await Invoice.find(
                 {
                     $and: [
                         dateStart?{createdAt: {$gte: dateStart}}:{},
@@ -1495,7 +1490,7 @@ const resolvers = {
             }
             let statistic = {}, data = []
             if(distributer){
-                let findDistributer = await DistributerAzyk.findOne(
+                let findDistributer = await Distributer.findOne(
                     distributer!=='super'?
                         {distributer: distributer}
                         :
@@ -1504,7 +1499,7 @@ const resolvers = {
                     .populate('sales')
                 if(findDistributer){
                     if(type==='all') {
-                        let clients = await DistrictAzyk
+                        let clients = await District
                             .find({organization: distributer!=='super'?distributer:null})
                             .distinct('client')
                         let organizations = []
@@ -1516,7 +1511,7 @@ const resolvers = {
                         }
                         else
                             organizations = findDistributer.sales
-                        data = await InvoiceAzyk.find(
+                        data = await Invoice.find(
                             {
                                 $and: [
                                     dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -1564,7 +1559,7 @@ const resolvers = {
                         }
                     }
                     else if(type==='districts') {
-                        let districts = await DistrictAzyk
+                        let districts = await District
                             .find({organization: distributer!=='super'?distributer:null})
                         let organizations = []
                         if(organization){
@@ -1576,7 +1571,7 @@ const resolvers = {
                         else
                             organizations = findDistributer.sales
                         for (let i = 0; i < districts.length; i++) {
-                            data = await InvoiceAzyk.find(
+                            data = await Invoice.find(
                                 {
                                     $and: [
                                         dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -1614,7 +1609,7 @@ const resolvers = {
 
                     }
                     else if(type==='agents') {
-                        let clients = await DistrictAzyk
+                        let clients = await District
                             .find({organization: distributer!=='super'?distributer:null})
                             .distinct('client')
                         let organizations = []
@@ -1626,7 +1621,7 @@ const resolvers = {
                         }
                         else
                             organizations = findDistributer.sales
-                        data = await InvoiceAzyk.find(
+                        data = await Invoice.find(
                             {
                                 $and: [
                                     dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -1649,8 +1644,8 @@ const resolvers = {
                                 }]})
                             .lean()
                         for (let i1 = 0; i1 < data.length; i1++) {
-                            let name = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent.name:'AZYK.STORE'
-                            let id = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent._id:'AZYK.STORE'
+                            let name = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent.name:'ZAKAJI.KZ'
+                            let id = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent._id:'ZAKAJI.KZ'
                             if (!statistic[id]) statistic[id] = {
                                 profit: 0,
                                 returned: 0,
@@ -1749,11 +1744,11 @@ const resolvers = {
             let returnedPriceAll = 0
 
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({user: {$in: excludedAgents}}).distinct('_id').lean()
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({user: {$in: excludedAgents}}).distinct('_id').lean()
             }
             if(!company) {
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -1800,7 +1795,7 @@ const resolvers = {
                 }
             }
             else {
-                let data = await DistrictAzyk.find({
+                let data = await District.find({
                     ...(company!=='super'?{organization: company}:{organization: null}),
                     name: {$ne: 'super'}
                 })
@@ -1812,7 +1807,7 @@ const resolvers = {
                         districts[data[i].client[i1].toString()] = data[i]
                     }
                 }
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -1924,10 +1919,10 @@ const resolvers = {
             let completAll = []
             let returnedPriceAll = 0
             if(online){
-                excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                excludedAgents = await EmploymentAzyk.find({user: {$in: excludedAgents}}).distinct('_id').lean()
+                excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                excludedAgents = await Employment.find({user: {$in: excludedAgents}}).distinct('_id').lean()
             }
-            let items = await ItemAzyk.find({
+            let items = await Item.find({
                 ...company?{organization: company}:{},
                 subBrand: {$ne: null}
             })
@@ -1944,7 +1939,7 @@ const resolvers = {
                 organizations.push(items[i].organization)
                 items[i] = items[i]._id
             }
-            let invoices = await InvoiceAzyk.find(
+            let invoices = await Invoice.find(
                 {
                     ...dateStart||company?
                         {
@@ -1970,7 +1965,7 @@ const resolvers = {
                     data.push(invoices[i].orders[i1])
                 }
             }
-            data = await OrderAzyk.find({
+            data = await Order.find({
                 _id: {$in: data},
                 item: {$in: items},
             })
@@ -2069,7 +2064,7 @@ const resolvers = {
             let completAll = 0
             let name
 
-            data = await InvoiceAzyk.find(
+            data = await Invoice.find(
                 {
                     $and: [
                         dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -2173,7 +2168,7 @@ const resolvers = {
             };
         }
     },
-    statisticAzykStoreOrder: async(parent, { company, dateStart, dateType, filter, city }, {user}) => {
+    statisticZakajiKzOrder: async(parent, { company, dateStart, dateType, filter, city }, {user}) => {
         if(['admin'].includes(user.role)){
             let dateEnd
             let statistic = {}, data = []
@@ -2197,7 +2192,7 @@ const resolvers = {
                     dateEnd.setMonth(dateEnd.getMonth() + 1)
             }
             let organizations
-            let agents = await EmploymentAzyk.find({organization: null})
+            let agents = await Employment.find({organization: null})
                 .select('_id')
                 .populate({
                     path: 'user',
@@ -2207,12 +2202,12 @@ const resolvers = {
             agents = agents.filter(agent => agent.user.role === 'суперагент')
             agents = agents.map(agent=>agent._id)
             if(!company){
-                organizations = await OrganizationAzyk.find({superagent: true, ...city?{cities: city}:{}}).distinct('_id')
+                organizations = await Organization.find({superagent: true, ...city?{cities: city}:{}}).distinct('_id')
             }
             else {
-                organizations = await OrganizationAzyk.find({_id: company, superagent: true, ...city?{cities: city}:{}}).distinct('_id')
+                organizations = await Organization.find({_id: company, superagent: true, ...city?{cities: city}:{}}).distinct('_id')
             }
-            data = await InvoiceAzyk.find(
+            data = await Invoice.find(
                 {
                     $and: [
                         dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -2236,7 +2231,7 @@ const resolvers = {
                 })
                 .lean()
             if(filter==='район'||company){
-                let districts = await DistrictAzyk.find({
+                let districts = await District.find({
                     organization: null,
                     name: {$ne: 'super'}
                 })
@@ -2386,7 +2381,7 @@ const resolvers = {
             }
             let statistic = {}
             if(!agent) {
-                let districts = await DistrictAzyk.find({
+                let districts = await District.find({
                     organization: user.organization?user.organization:organization,
                     ...user.role==='менеджер'?{manager: user._id}:{}
                 })
@@ -2396,7 +2391,7 @@ const resolvers = {
                         select: 'name _id'
                     })
                     .lean()
-                let data = await MerchandisingAzyk.find({
+                let data = await Merchandising.find({
                     $and: [
                         dateStart ? {createdAt: {$gte: dateStart}} : {},
                         dateEnd ? {createdAt: {$lt: dateEnd}} : {}
@@ -2465,7 +2460,7 @@ const resolvers = {
                 };
             }
             else {
-                let districts = await DistrictAzyk.find({
+                let districts = await District.find({
                     organization: user.organization?user.organization:organization,
                     agent
                 })
@@ -2484,7 +2479,7 @@ const resolvers = {
                             }
                     }
                 }
-                let data = await MerchandisingAzyk.find({
+                let data = await Merchandising.find({
                     $and: [
                         dateStart ? {createdAt: {$gte: dateStart}} : {},
                         dateEnd ? {createdAt: {$lt: dateEnd}} : {}
@@ -2542,7 +2537,7 @@ const resolvers = {
     statisticDevice: async(parent, { filter }, {user}) => {
         if(['admin'].includes(user.role)){
             let statistic = {}
-            let data = await ClientAzyk.find({device: {$ne: null}})
+            let data = await Client.find({device: {$ne: null}})
                 .select('device')
                 .lean()
             let device
@@ -2621,7 +2616,7 @@ const resolvers = {
             dateStart.setHours(3, 0, 0, 0)
             let dateEnd = new Date(dateStart)
             dateEnd.setDate(dateEnd.getDate() + 1)
-            let data = await InvoiceAzyk.find(
+            let data = await Invoice.find(
                 {
                     $and: [{dateDelivery: {$gte: dateStart}}, {dateDelivery: {$lt: dateEnd}}],
                     taken: true,
@@ -2658,7 +2653,7 @@ const resolvers = {
             let completAll = 0
 
             if(!company) {
-                data = await ReturnedAzyk.find(
+                data = await Returned.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -2689,7 +2684,7 @@ const resolvers = {
                 }
             }
             else {
-                let data = await DistrictAzyk.find({
+                let data = await District.find({
                     ...(company!=='super'?{organization: company}:{organization: null}),
                     name: {$ne: 'super'}
                 })
@@ -2701,7 +2696,7 @@ const resolvers = {
                         districts[data[i].client[i1].toString()] = data[i]
                     }
                 }
-                data = await ReturnedAzyk.find(
+                data = await Returned.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -2794,7 +2789,7 @@ const resolvers = {
             let completAll = 0
 
             if(!company) {
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -2844,7 +2839,7 @@ const resolvers = {
                 }
             }
             else {
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -2867,7 +2862,7 @@ const resolvers = {
                     .lean()
 
                 for(let i=0; i<data.length; i++) {
-                    let agent = !data[i].agent||['суперменеджер', 'суперагент', 'суперэкспедитор'].includes(data[i].agent.user.role)?{_id: 'AZYK.STORE', name: 'AZYK.STORE'}:{name: data[i].agent.name, _id: data[i].agent._id.toString()}
+                    let agent = !data[i].agent||['суперменеджер', 'суперагент', 'суперэкспедитор'].includes(data[i].agent.user.role)?{_id: 'ZAKAJI.KZ', name: 'ZAKAJI.KZ'}:{name: data[i].agent.name, _id: data[i].agent._id.toString()}
 
                     if(!statistic[agent._id]) {
                         statistic[agent._id] = {
@@ -2934,7 +2929,7 @@ const resolvers = {
             };
         }
     },
-    statisticAzykStoreAgents: async(parent, { company, dateStart, dateType, filter, city }, {user}) => {
+    statisticZakajiKzAgents: async(parent, { company, dateStart, dateType, filter, city }, {user}) => {
         if('admin'===user.role){
             let dateEnd
             if(dateStart){
@@ -2961,7 +2956,7 @@ const resolvers = {
             let profit = 0
 
             let organizations
-            let agents = await EmploymentAzyk.find({organization: null})
+            let agents = await Employment.find({organization: null})
                 .select('_id')
                 .populate({
                     path: 'user',
@@ -2971,12 +2966,12 @@ const resolvers = {
             agents = agents.filter(agent => agent.user.role === 'суперагент')
             agents = agents.map(agent=>agent._id)
             if(!company){
-                organizations = await OrganizationAzyk.find({superagent: true, ...city?{cities: city}:{}}).distinct('_id')
+                organizations = await Organization.find({superagent: true, ...city?{cities: city}:{}}).distinct('_id')
             }
             else {
-                organizations = await OrganizationAzyk.find({_id: company, superagent: true, ...city?{cities: city}:{}}).distinct('_id')
+                organizations = await Organization.find({_id: company, superagent: true, ...city?{cities: city}:{}}).distinct('_id')
             }
-            data = await InvoiceAzyk.find(
+            data = await Invoice.find(
                 {
                     $and: [
                         dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -3009,8 +3004,8 @@ const resolvers = {
                     let id
                     let name
                     if(filter==='агент'){
-                        name = data[i].agent?data[i].agent.name:'AZYK.STORE'
-                        id = data[i].agent?data[i].agent._id:'AZYK.STORE'
+                        name = data[i].agent?data[i].agent.name:'ZAKAJI.KZ'
+                        id = data[i].agent?data[i].agent._id:'ZAKAJI.KZ'
                     }
                     else{
                         type = data[i].agent?'оффлайн':'онлайн'
@@ -3052,8 +3047,8 @@ const resolvers = {
             }
             else {
                 for(let i=0; i<data.length; i++) {
-                    let name = data[i].agent?data[i].agent.name:'AZYK.STORE'
-                    let id = data[i].agent?data[i].agent._id:'AZYK.STORE'
+                    let name = data[i].agent?data[i].agent.name:'ZAKAJI.KZ'
+                    let id = data[i].agent?data[i].agent._id:'ZAKAJI.KZ'
                     if (!statistic[id])
                         statistic[id] = {
                             price: 0,
@@ -3156,10 +3151,10 @@ const resolvers = {
             if(client){
                 let excludedAgents = []
                 if(online){
-                    excludedAgents = await UserAzyk.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
-                    excludedAgents = await EmploymentAzyk.find({user: {$in: excludedAgents}}).distinct('_id').lean()
+                    excludedAgents = await User.find({$or: [{role: 'агент'}, {role: 'менеджер'}, {role: 'организация'}, {role: 'суперорганизация'}]}).distinct('_id').lean()
+                    excludedAgents = await Employment.find({user: {$in: excludedAgents}}).distinct('_id').lean()
                 }
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -3240,7 +3235,7 @@ const resolvers = {
             };
         }
     },
-    statisticAzykStoreAgent: async(parent, { agent, dateStart, dateType }, {user}) => {
+    statisticZakajiKzAgent: async(parent, { agent, dateStart, dateType }, {user}) => {
         if('admin'===user.role){
             let dateEnd
             if(dateStart){
@@ -3265,7 +3260,7 @@ const resolvers = {
             let consignmentPriceAll = 0
             let completAll = 0
             if(agent){
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         $and: [
                             dateStart ? {createdAt: {$gte: dateStart}} : {},
@@ -3370,7 +3365,7 @@ const resolvers = {
             let dateEnd = new Date(dateStart)
             dateEnd.setDate(dateEnd.getDate() + 1)
             let data = []
-            let agents = await UserAzyk.find({
+            let agents = await User.find({
                 ...(organization!=='super'?
                         {$or: [{role: 'агент'}, {role: 'суперагент'}]}
                         :
@@ -3379,7 +3374,7 @@ const resolvers = {
             })
                 .distinct('_id')
                 .lean()
-            agents = await EmploymentAzyk.find({
+            agents = await Employment.find({
                 ...(organization&&organization!=='super'?{organization: organization}:{}),
                 user: {$in: agents},
                 del: {$ne: 'deleted'}
@@ -3387,7 +3382,7 @@ const resolvers = {
                 .select('_id name')
                 .lean()
             for (let i = 0; i < agents.length; i++) {
-                let orders = await InvoiceAzyk.find(
+                let orders = await Invoice.find(
                     {
                         $and: [
                             {createdAt: {$gte: dateStart}},
@@ -3401,7 +3396,7 @@ const resolvers = {
                     .select('createdAt')
                     .sort('createdAt')
                     .lean()
-                let agentHistoryGeoAzyks = await AgentHistoryGeoAzyk.find({
+                let agentHistoryGeos = await AgentHistoryGeo.find({
                     $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt:dateEnd}}],
                     agent: agents[i]._id
                 })
@@ -3414,7 +3409,7 @@ const resolvers = {
                         orders.length>0?pdHHMM(orders[0].createdAt):'-',
                         orders.length>0?pdHHMM(orders[orders.length-1].createdAt):'-',
                         orders.length,
-                        agentHistoryGeoAzyks.length
+                        agentHistoryGeos.length
 
                     ]
                 })
@@ -3428,7 +3423,7 @@ const resolvers = {
     },
     activeItem: async(parent, { organization }, {user}) => {
         if(['admin', 'суперорганизация', 'организация', 'менеджер', 'агент'].includes(user.role)){
-            let data/* = await InvoiceAzyk.find(
+            let data/* = await Invoice.find(
                     {
                         del: {$ne: 'deleted'},
                         organization: organization,
@@ -3436,12 +3431,12 @@ const resolvers = {
                     }
                 ).distinct('orders').lean()
             data = data.reduce((acc, val) => acc.concat(val), []);
-            data = await OrderAzyk.find(
+            data = await Order.find(
                 {
                     _id: {$in: data},
                 }
             ).distinct('item').lean()*/
-            data = await ItemAzyk.find(
+            data = await Item.find(
                 {
                     /*_id: {$in: data}*/
                     organization: organization
@@ -3454,7 +3449,7 @@ const resolvers = {
     },
     activeOrganization: async(parent, {city}, {user}) => {
         if('admin'===user.role){
-            let data = await OrganizationAzyk.find(
+            let data = await Organization.find(
                 {
                     ...city?{cities: city}:{},
                 }
@@ -3464,7 +3459,7 @@ const resolvers = {
             return data;
         }
         else if('суперагент'===user.role){
-            let data = await OrganizationAzyk.find(
+            let data = await Organization.find(
                 {
                     status: 'active',
                     superagent: true,
@@ -3476,7 +3471,7 @@ const resolvers = {
             return data;
         }
         else if('client'===user.role){
-            let data = await OrganizationAzyk.find(
+            let data = await Organization.find(
                 {
                     ...city?{cities: user.city}:{},
                     status: 'active',
@@ -3488,7 +3483,7 @@ const resolvers = {
             return data;
         }
         else if(['суперорганизация', 'организация', 'менеджер', 'агент'].includes(user.role)){
-            let data = await OrganizationAzyk.find(
+            let data = await Organization.find(
                 {
                     _id: user.organization
                 }
@@ -3499,7 +3494,7 @@ const resolvers = {
     },
     superagentOrganization: async(parent, {city}, {user}) => {
         if(['admin', 'суперорганизация', 'организация', 'менеджер', 'агент'].includes(user.role)){
-            let data = await OrganizationAzyk.find(
+            let data = await Organization.find(
                 {
                     ...city?{cities: city}:{},
                     superagent: true
@@ -3513,8 +3508,8 @@ const resolvers = {
     statisticClientGeo: async(parent, { search, organization, item, city }, {user}) => {
         if(['admin', 'суперорганизация'].includes(user.role)){
             organization = user.organization?user.organization:organization
-            let clients = await UserAzyk.find({role: 'client', status: 'active'}).distinct('_id').lean()
-            clients = await ClientAzyk.find({
+            let clients = await User.find({role: 'client', status: 'active'}).distinct('_id').lean()
+            clients = await Client.find({
                 user: {$in: clients},
                 del: {$ne: 'deleted'},
                 ...city?{city: city}:{},
@@ -3561,7 +3556,7 @@ const resolvers = {
             }
             let invoices, sortInvoices = {}
             if(item){
-                invoices =  await OrderAzyk.aggregate(
+                invoices =  await Order.aggregate(
                     [
                         {
                             $match:{
@@ -3583,7 +3578,7 @@ const resolvers = {
                     ])
             }
             else{
-                invoices =  await InvoiceAzyk.aggregate(
+                invoices =  await Invoice.aggregate(
                     [
                         {
                             $match:{
@@ -3659,7 +3654,7 @@ const resolvers = {
             dateStart.setHours(3, 0, 0, 0)
             let dateEnd = new Date(dateStart)
             dateEnd.setDate(dateEnd.getDate() + 1)
-            let data = await InvoiceAzyk.find(
+            let data = await Invoice.find(
                 {
                     $and: filter==='Дата доставки'?[{dateDelivery: {$gte: dateStart}}, {dateDelivery: {$lt: dateEnd}}]:[{createdAt: {$gte: dateStart}}, {createdAt: {$lt: dateEnd}}],
                     del: {$ne: 'deleted'},
@@ -3793,7 +3788,7 @@ const resolvers = {
             }
             let data = []
             if(organization!=='super'){
-                data = await InvoiceAzyk.find(
+                data = await Invoice.find(
                     {
                         $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt:dateEnd}}],
                         del: {$ne: 'deleted'},
@@ -3824,15 +3819,15 @@ const resolvers = {
                     .lean()
             }
             if(all){
-                let distributers = await DistributerAzyk.findOne({
+                let distributers = await Distributer.findOne({
                     distributer: organization==='super'?null:organization
                 })
-                let clients = await DistrictAzyk.find({
+                let clients = await District.find({
                     organization: organization==='super'?null:organization,
                 }).distinct('client')
                 if(distributers){
                     for(let i = 0; i<distributers.provider.length;i++) {
-                        data = [...(await InvoiceAzyk.find(
+                        data = [...(await Invoice.find(
                             {
                                 $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt:dateEnd}}],
                                 del: {$ne: 'deleted'},
@@ -3868,10 +3863,10 @@ const resolvers = {
                 }
             }
             if(organization!=='super') {
-                organization = await OrganizationAzyk.findOne({_id: organization})
+                organization = await Organization.findOne({_id: organization})
             }
             else {
-                organization = await ContactAzyk.findOne()
+                organization = await Contact.findOne()
             }
             let worksheet;
             let auto
@@ -4017,7 +4012,7 @@ const resolvers = {
                     worksheet.getCell(`B${row}`).value = data[i].client.phone[i1];
                 }
                 if(forwarder){
-                    let district = await DistrictAzyk.findOne({client: data[i].client._id, organization: forwarder!=='super'?forwarder:null}).populate('ecspeditor').lean()
+                    let district = await District.findOne({client: data[i].client._id, organization: forwarder!=='super'?forwarder:null}).populate('ecspeditor').lean()
                     data[i].forwarder = district?district.ecspeditor:null
                 }
                 if(data[i].forwarder){
@@ -4031,7 +4026,7 @@ const resolvers = {
                         worksheet.getCell(`A${row}`).value = 'Тел:';
                         worksheet.getCell(`B${row}`).value = data[i].forwarder.phone.toString()
                     }
-                    auto = await AutoAzyk.findOne({employment: data[i].forwarder._id})
+                    auto = await Auto.findOne({employment: data[i].forwarder._id})
                     row+=1;
                     worksheet.getCell(`A${row}`).font = {bold: true};
                     worksheet.getCell(`A${row}`).value = '№ рейса:';
@@ -4129,11 +4124,11 @@ const resolvers = {
             dateStart.setHours(3, 0, 0, 0)
             if(user.organization)
                 organization = user.organization
-            let districts = await DistrictAzyk.find({
+            let districts = await District.find({
                 organization: organization
             }).lean()
             for(let x=0;x<districts.length;x++) {
-                let data = await InvoiceAzyk.find(
+                let data = await Invoice.find(
                     {
                         dateDelivery: dateStart,
                         del: {$ne: 'deleted'},
@@ -4227,9 +4222,9 @@ const resolvers = {
             organization = user.organization?user.organization:organization
             let cities
             if(organization!=='super')
-                cities = (await OrganizationAzyk.findById(organization).select('cities').lean()).cities
+                cities = (await Organization.findById(organization).select('cities').lean()).cities
             let workbook = new ExcelJS.Workbook();
-            let data = await ClientAzyk.find(
+            let data = await Client.find(
                 {
                     ...city?{city}:cities?{city: {$in: cities}}:{},
                     ...{del: {$ne: 'deleted'}}
@@ -4257,7 +4252,7 @@ const resolvers = {
             worksheet.getCell('E1').value = 'Телефон';
             for(let i = 0; i<data.length;i++){
                 let GUID = ''
-                let findGUID = await Integrate1CAzyk.findOne({
+                let findGUID = await Integrate1C.findOne({
                     ...(organization==='super'?{organization: null}:{organization: organization}),
                     client: data[i]._id})
                 if(findGUID)
@@ -4285,7 +4280,7 @@ const resolvers = {
         if(['admin', 'суперорганизация'].includes(user.role)){
             organization = user.organization?user.organization:organization
             let workbook = new ExcelJS.Workbook();
-            let data = await EmploymentAzyk.find(
+            let data = await Employment.find(
                 {
                     ...(organization==='super'?{organization: null}:{organization: organization}),
                     ...{del: {$ne: 'deleted'}}
@@ -4310,7 +4305,7 @@ const resolvers = {
             worksheet.getCell('E1').value = 'Телефон';
             for(let i = 0; i<data.length;i++){
                 let GUID = ''
-                let findGUID = await Integrate1CAzyk.findOne({
+                let findGUID = await Integrate1C.findOne({
                     ...(organization==='super'?{organization: null}:{organization: organization}),
                     $or: [
                         {agent: data[i]._id},
@@ -4343,7 +4338,7 @@ const resolvers = {
         if(['admin', 'суперорганизация'].includes(user.role)){
             organization = user.organization?user.organization:organization
             let workbook = new ExcelJS.Workbook();
-            let data = await DistrictAzyk.find(
+            let data = await District.find(
                 {
                     ...(organization==='super'?{organization: null}:{organization: organization})
                 }
@@ -4369,7 +4364,7 @@ const resolvers = {
 
                 for(let i1 = 0; i1<data[i].client.length;i1++){
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].client[i1]._id})
                     if(findGUID)
@@ -4398,7 +4393,7 @@ const resolvers = {
         if(['admin', 'суперорганизация'].includes(user.role)){
             organization = user.organization?user.organization:organization
             let workbook = new ExcelJS.Workbook();
-            let data = await AgentRouteAzyk.find(
+            let data = await AgentRoute.find(
                 {
                     ...(organization==='super'?{organization: null}:{organization: organization})
                 }
@@ -4471,7 +4466,7 @@ const resolvers = {
                 worksheet.getCell('AA1').value = 'Магазин';
                 for(let i1 = 0; i1<data[i].clients[0].length;i1++) {
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].clients[0][i1]}).populate('client')
                     worksheet.getCell(`A${i1 + 2}`).value = data[i].clients[0][i1].toString();
@@ -4483,7 +4478,7 @@ const resolvers = {
                 }
                 for(let i1 = 0; i1<data[i].clients[1].length;i1++) {
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].clients[1][i1]}).populate('client')
                     worksheet.getCell(`E${i1 + 2}`).value = data[i].clients[1][i1].toString();
@@ -4495,7 +4490,7 @@ const resolvers = {
                 }
                 for(let i1 = 0; i1<data[i].clients[2].length;i1++) {
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].clients[2][i1]}).populate('client')
                     worksheet.getCell(`I${i1 + 2}`).value = data[i].clients[2][i1].toString();
@@ -4507,7 +4502,7 @@ const resolvers = {
                 }
                 for(let i1 = 0; i1<data[i].clients[3].length;i1++) {
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].clients[3][i1]}).populate('client')
                     worksheet.getCell(`M${i1 + 2}`).value = data[i].clients[3][i1].toString();
@@ -4519,7 +4514,7 @@ const resolvers = {
                 }
                 for(let i1 = 0; i1<data[i].clients[4].length;i1++) {
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].clients[4][i1]}).populate('client')
                     worksheet.getCell(`Q${i1 + 2}`).value = data[i].clients[4][i1].toString();
@@ -4532,7 +4527,7 @@ const resolvers = {
                 }
                 for(let i1 = 0; i1<data[i].clients[5].length;i1++) {
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].clients[5][i1]}).populate('client')
                     worksheet.getCell(`U${i1 + 2}`).value = data[i].clients[5][i1].toString();
@@ -4544,7 +4539,7 @@ const resolvers = {
                 }
                 for(let i1 = 0; i1<data[i].clients[6].length;i1++) {
                     let GUID = ''
-                    let findGUID = await Integrate1CAzyk.findOne({
+                    let findGUID = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         client: data[i].clients[6][i1]}).populate('client')
                     worksheet.getCell(`Y${i1 + 2}`).value = data[i].clients[6][i1].toString();
@@ -4571,19 +4566,19 @@ const resolvers = {
 const resolversMutation = {
     uploadingItems: async(parent, { document, organization, city }, {user}) => {
         if (user.role === 'admin') {
-            let item, integrate1CAzyk
+            let item, integrate1C
             let {stream, filename} = await document;
             filename = await saveFile(stream, filename);
             let xlsxpath = path.join(app.dirname, 'public', filename);
             let rows = await readXlsxFile(xlsxpath)
-            let subCategory = (await SubCategoryAzyk.findOne({name: 'Не задано'}).select('_id').lean())._id
+            let subCategory = (await SubCategory.findOne({name: 'Не задано'}).select('_id').lean())._id
             for (let i = 0; i < rows.length; i++) {
-                integrate1CAzyk = await Integrate1CAzyk.findOne({
+                integrate1C = await Integrate1C.findOne({
                     organization: organization,
                     guid: rows[i][0]
                 })
-                if(!integrate1CAzyk) {
-                    item = new ItemAzyk({
+                if(!integrate1C) {
+                    item = new Item({
                         name: rows[i][1],
                         image: process.env.URL.trim()+'/static/add.png',
                         info: '',
@@ -4604,8 +4599,8 @@ const resolversMutation = {
                         apiece: rows[i][5]==='1',
                         costPrice: 0
                     });
-                    item = await ItemAzyk.create(item);
-                    integrate1CAzyk = new Integrate1CAzyk({
+                    item = await Item.create(item);
+                    integrate1C = new Integrate1C({
                         item: item._id,
                         client: null,
                         agent: null,
@@ -4613,10 +4608,10 @@ const resolversMutation = {
                         organization: organization,
                         guid: rows[i][0],
                     });
-                    await Integrate1CAzyk.create(integrate1CAzyk)
+                    await Integrate1C.create(integrate1C)
                 }
                 else {
-                    item = await ItemAzyk.findOne({_id: integrate1CAzyk.item, organization})
+                    item = await Item.findOne({_id: integrate1C.item, organization})
                     item.name = rows[i][1]
                     item.price = checkFloat(rows[i][2])
                     item.packaging = checkInt(rows[i][3])
@@ -4636,19 +4631,19 @@ const resolversMutation = {
             let xlsxpath = path.join(app.dirname, 'public', filename);
             let rows = await readXlsxFile(xlsxpath)
             for (let i = 0; i < rows.length; i++) {
-                let integrate1CAzyk = await Integrate1CAzyk.findOne({
+                let integrate1C = await Integrate1C.findOne({
                     organization: organization,
                     guid: rows[i][0]
                 })
-                if(!integrate1CAzyk) {
-                    let client = new UserAzyk({
+                if(!integrate1C) {
+                    let client = new User({
                         login: randomstring.generate(20),
                         role: 'client',
                         status: 'deactive',
                         password: '12345678',
                     });
-                    client = await UserAzyk.create(client);
-                    client = new ClientAzyk({
+                    client = await User.create(client);
+                    client = new Client({
                         name: rows[i][1],
                         phone: [''],
                         city,
@@ -4656,8 +4651,8 @@ const resolversMutation = {
                         user: client._id,
                         notification: false
                     });
-                    client = await ClientAzyk.create(client);
-                    let _object = new Integrate1CAzyk({
+                    client = await Client.create(client);
+                    let _object = new Integrate1C({
                         item: null,
                         client: client._id,
                         agent: null,
@@ -4665,7 +4660,7 @@ const resolversMutation = {
                         organization: organization,
                         guid: rows[i][0],
                     });
-                    await Integrate1CAzyk.create(_object)
+                    await Integrate1C.create(_object)
                 }
             }
             await deleteFile(filename)
@@ -4678,72 +4673,72 @@ const resolversMutation = {
             filename = await saveFile(stream, filename);
             let xlsxpath = path.join(app.dirname, 'public', filename);
             let rows = await readXlsxFile(xlsxpath)
-            agentRoute = await AgentRouteAzyk.findOne({_id: agentRoute})
-            let integrate1CAzyk
+            agentRoute = await AgentRoute.findOne({_id: agentRoute})
+            let integrate1C
             if(agentRoute){
                 agentRoute.clients = [[],[],[],[],[],[],[]]
                 for (let i = 0; i < rows.length; i++) {
                     if(rows[i][0]&&rows[i][0].length>0){
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             organization: agentRoute.organization,
                             guid: rows[i][0]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            agentRoute.clients[0].push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            agentRoute.clients[0].push(integrate1C.client)
                         }
                     }
                     if(rows[i][1]&&rows[i][1].length>0){
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             organization: agentRoute.organization,
                             guid: rows[i][1]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            agentRoute.clients[1].push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            agentRoute.clients[1].push(integrate1C.client)
                         }
                     }
                     if(rows[i][2]&&rows[i][2].length>0){
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             organization: agentRoute.organization,
                             guid: rows[i][2]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            agentRoute.clients[2].push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            agentRoute.clients[2].push(integrate1C.client)
                         }
                     }
                     if(rows[i][3]&&rows[i][3].length>0){
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             organization: agentRoute.organization,
                             guid: rows[i][3]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            agentRoute.clients[3].push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            agentRoute.clients[3].push(integrate1C.client)
                         }
                     }
                     if(rows[i][4]&&rows[i][4].length>0){
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             organization: agentRoute.organization,
                             guid: rows[i][4]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            agentRoute.clients[4].push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            agentRoute.clients[4].push(integrate1C.client)
                         }
                     }
                     if(rows[i][5]&&rows[i][5].length>0){
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             organization: agentRoute.organization,
                             guid: rows[i][5]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            agentRoute.clients[5].push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            agentRoute.clients[5].push(integrate1C.client)
                         }
                     }
                     if(rows[i][6]&&rows[i][6].length>0){
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             organization: agentRoute.organization,
                             guid: rows[i][6]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            agentRoute.clients[6].push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            agentRoute.clients[6].push(integrate1C.client)
                         }
                     }
                 }
@@ -4761,15 +4756,15 @@ const resolversMutation = {
             let rows = await readXlsxFile(xlsxpath)
             let districts = {}
             let findEmployments = {}
-            let integrate1CAzyk
+            let integrate1C
             for (let i = 0; i < rows.length; i++) {
                 if(!findEmployments[rows[i][0]]||!districts[findEmployments[rows[i][0]]]){
-                    integrate1CAzyk = await Integrate1CAzyk.findOne({
+                    integrate1C = await Integrate1C.findOne({
                         ...(organization==='super'?{organization: null}:{organization: organization}),
                         guid: rows[i][0]
                     })
-                    if (integrate1CAzyk && integrate1CAzyk.agent) {
-                        findEmployments[rows[i][0]] = integrate1CAzyk.agent
+                    if (integrate1C && integrate1C.agent) {
+                        findEmployments[rows[i][0]] = integrate1C.agent
                         districts[findEmployments[rows[i][0]]] = []
                     }
                 }
@@ -4781,19 +4776,19 @@ const resolversMutation = {
             const keys1 = Object.keys(districts);
             let district;
             for (let i = 0; i < keys1.length; i++) {
-                district = await DistrictAzyk.findOne({
+                district = await District.findOne({
                     ...(organization==='super'?{organization: null}:{organization: organization}),
                     agent: keys1[i]
                 })
                 if(district) {
                     district.client = []
                     for (let i1 = 0; i1 < districts[keys1[i]].length; i1++) {
-                        integrate1CAzyk = await Integrate1CAzyk.findOne({
+                        integrate1C = await Integrate1C.findOne({
                             ...(organization==='super'?{organization: null}:{organization: organization}),
                             guid: districts[keys1[i]][i1]
                         })
-                        if (integrate1CAzyk && integrate1CAzyk.client) {
-                            district.client.push(integrate1CAzyk.client)
+                        if (integrate1C && integrate1C.client) {
+                            district.client.push(integrate1C.client)
                         }
                     }
                     district.markModified('client');

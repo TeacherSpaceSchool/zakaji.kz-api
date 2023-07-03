@@ -2,7 +2,7 @@
 
 let app = require('../app').app;
 let serverGQL = require('../app').serverGQL;
-let debug = require('debug')('azyk-api:server');
+let debug = require('debug')('zakaji.kz-api:server');
 let http = require('http');
 const start = require('../module/start');
 

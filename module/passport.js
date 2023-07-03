@@ -3,9 +3,9 @@ const LocalStrategy = require('passport-local');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const jwtsecret = '@615141ViDiK141516@';
-const UserAzyk = require('../models/userAzyk');
-const ClientAzyk = require('../models/clientAzyk');
-const EmploymentAzyk = require('../models/employmentAzyk');
+const User = require('../models/user');
+const Client = require('../models/client');
+const Employment = require('../models/employment');
 //const { setProfile, getProfile } = require('../redis/profile');
 const jwt = require('jsonwebtoken');
 
@@ -17,7 +17,7 @@ let start = () => {
             session: false
         },
         function (login, password, done) {
-            UserAzyk.findOne({login: login}, (err, user) => {
+            User.findOne({login: login}, (err, user) => {
                 if (err) {
                     return done(err);
                 }
@@ -33,7 +33,7 @@ let start = () => {
     jwtOptions.jwtFromRequest= ExtractJwt.fromAuthHeaderAsBearerToken();
     jwtOptions.secretOrKey=jwtsecret;
     passport.use(new JwtStrategy(jwtOptions, function (payload, done) {
-        UserAzyk.findOne({login:payload.login}, (err, user) => {
+        User.findOne({login:payload.login}, (err, user) => {
             if (err) {
                 return done(err)
             }
@@ -102,7 +102,7 @@ const verifydeuserGQL = async (req, res) => {
                 if('admin'===user.role)
                     resolve(user)
                 else if('client'===user.role) {
-                    let client = await ClientAzyk.findOne({user: user._id}).select('client category city')
+                    let client = await Client.findOne({user: user._id}).select('client category city')
                     user.client = client._id
                     user.category = client.category
                     user.city = client.city
@@ -112,12 +112,12 @@ const verifydeuserGQL = async (req, res) => {
 
                 }
                 else if(['суперагент', 'суперменеджер', 'суперэкспедитор'].includes(user.role)) {
-                    let employment = await EmploymentAzyk.findOne({user: user._id}).select('_id').lean()
+                    let employment = await Employment.findOne({user: user._id}).select('_id').lean()
                     user.employment = employment._id
                     resolve(user)
                 }
                 else {
-                    let employment = await EmploymentAzyk.findOne({user: user._id})
+                    let employment = await Employment.findOne({user: user._id})
                         .select('_id organization')
                         .populate({ path: 'organization', select: 'onlyIntegrate onlyDistrict _id status addedClient cities' }).lean()
                     if(employment.organization.status==='active') {
@@ -194,13 +194,13 @@ const getstatus = async (req, res) => {
 
 const signupuser = async (req, res) => {
     try{
-        let _user = new UserAzyk({
+        let _user = new User({
             login: req.query.login,
             role: 'client',
             status: 'active',
             password: req.query.password,
         });
-        const user = await UserAzyk.create(_user);
+        const user = await User.create(_user);
         const payload = {
             id: user._id,
             login: user.login,
@@ -220,15 +220,15 @@ const signupuser = async (req, res) => {
 
 const signupuserGQL = async ({password, login}, res) => {
     try{
-        //await UserAzyk.deleteMany()
-        let user = new UserAzyk({
+        //await User.deleteMany()
+        let user = new User({
             login: login.trim(),
             role: 'client',
             status: 'active',
             password: password,
         });
-        user = await UserAzyk.create(user);
-        const client = new ClientAzyk({
+        user = await User.create(user);
+        const client = new Client({
             name: '',
             email: '',
             address: [],
@@ -240,7 +240,7 @@ const signupuserGQL = async ({password, login}, res) => {
             city: '',
             notification: false
         });
-        await ClientAzyk.create(client);
+        await Client.create(client);
         const payload = {
             id: user._id,
             login: user.login,
@@ -278,7 +278,7 @@ const signinuserGQL = (req, res) => {
                     await res.clearCookie('jwt');
                     await res.cookie('jwt', token, {maxAge: 10000*24*60*60*1000 });
                     if(!['admin', 'client'].includes(user.role)) {
-                        let employment = await EmploymentAzyk.findOne({user: user._id}).select('organization').lean()
+                        let employment = await Employment.findOne({user: user._id}).select('organization').lean()
                         user.organization = employment.organization
                     }
                     resolve({

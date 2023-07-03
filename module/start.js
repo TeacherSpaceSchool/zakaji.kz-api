@@ -1,31 +1,31 @@
-const { reductionCategoryAzyk } = require('../module/categoryAzyk');
-const { reductionSubCategoryAzyk } = require('../module/subCategoryAzyk');
-const { reductionSubBrands } = require('../module/subBrandAzyk');
-const { reductionToRoute } = require('../module/routeAzyk');
-const { reductionToAgentRoute } = require('../module/agentRouteAzyk');
-const { reductionSingleOutXMLAzyk } = require('../module/reductionSingleOutXMLAzyk');
-const { reductionReviews } = require('../module/reviewAzyk');
-const { reductionOutAdsXMLAzyk } = require('../module/singleOutXMLAzyk');
-const { reductionToOrganization } = require('../module/organizationAzyk');
-const { reductionToEmployment } = require('../module/employmentAzyk');
-const { reductionToClient } = require('../module/clientAzyk');
-const { reductionToAds } = require('../module/adsAzyk');
-const { reductionToItem } = require('../module/itemAzyk');
-const { reductionInvoices } = require('../module/invoiceAzyk');
-const { reductionReturneds } = require('../module/returnedAzyk');
-const { reductionToDeliveryDate } = require('../module/deliveryDateAzyk');
-const { reductionMerchandising } = require('../module/merchandisingAzyk');
-const { reductionRepairEquipment } = require('../module/repairEquipmentAzyk');
+const { reductionCategory } = require('../module/category');
+const { reductionSubCategory } = require('../module/subCategory');
+const { reductionSubBrands } = require('../module/subBrand');
+const { reductionToRoute } = require('../module/route');
+const { reductionToAgentRoute } = require('../module/agentRoute');
+const { reductionSingleOutXML } = require('../module/reductionSingleOutXML');
+const { reductionReviews } = require('../module/review');
+const { reductionOutAdsXML } = require('../module/singleOutXML');
+const { reductionToOrganization } = require('../module/organization');
+const { reductionToEmployment } = require('../module/employment');
+const { reductionToClient } = require('../module/client');
+const { reductionToAds } = require('../module/ads');
+const { reductionToItem } = require('../module/item');
+const { reductionInvoices } = require('../module/invoice');
+const { reductionReturneds } = require('../module/returned');
+const { reductionToDeliveryDate } = require('../module/deliveryDate');
+const { reductionMerchandising } = require('../module/merchandising');
+const { reductionRepairEquipment } = require('../module/repairEquipment');
 const { startClientRedis } = require('../module/redis');
 const { reductionToUser, createAdmin } = require('../module/user');
 const { Worker, isMainThread } = require('worker_threads');
-const OrganizationAzyk = require('../models/organizationAzyk');
-const InvoiceAzyk = require('../models/invoiceAzyk');
-const OrderAzyk = require('../models/orderAzyk');
-const { setSingleOutXMLAzyk } = require('../module/singleOutXMLAzyk');
-const { checkAdss } = require('../graphql/adsAzyk');
+const Organization = require('../models/organization');
+const Invoice = require('../models/invoice');
+const Order = require('../models/order');
+const { setSingleOutXML } = require('../module/singleOutXML');
+const { checkAdss } = require('../graphql/ads');
 const { pubsub } = require('../graphql/index');
-const MerchandisingAzyk = require('../models/merchandisingAzyk');
+const Merchandising = require('../models/merchandising');
 
 let startDeleteBD = async () => {
     if(isMainThread) {
@@ -57,18 +57,18 @@ let startResetUnloading = async () => {
     }
 }
 
-let startOutXMLShoroAzyk = async () => {
+let startOutXMLShoro = async () => {
     if(isMainThread) {
-        let w = new Worker('./thread/singleOutXMLAzyk.js', {workerData: 0});
+        let w = new Worker('./thread/singleOutXML.js', {workerData: 0});
         w.on('message', (msg) => {
-            console.log('SingleOutXMLAzyk: '+msg);
+            console.log('SingleOutXML: '+msg);
         })
         w.on('error', console.error);
         w.on('exit', (code) => {
             if(code !== 0)
-                console.error(new Error(`SingleOutXMLAzyk stopped with exit code ${code}`))
+                console.error(new Error(`SingleOutXML stopped with exit code ${code}`))
         });
-        console.log('SingleOutXMLAzyk '+w.threadId+ ' run')
+        console.log('SingleOutXML '+w.threadId+ ' run')
     }
 }
 
@@ -94,24 +94,24 @@ let start = async () => {
     //await reductionRepairEquipment()
     await startResetUnloading()
     await startReminderClient();
-    await startOutXMLShoroAzyk();
+    await startOutXMLShoro();
     await startDeleteBD();
     //await reductionReviews();
     //await reductionToEmployment()
     //await reductionSubBrands();
     //await reductionToDeliveryDate();
-    //await reductionSingleOutXMLAzyk()
+    //await reductionSingleOutXML()
     //await reductionInvoices()
     //await reductionReturneds()
-    //await reductionCategoryAzyk()
-    //await reductionSubCategoryAzyk()
+    await reductionCategory()
+    await reductionSubCategory()
     //await reductionToRoute()
     //await reductionToClient()
     //await reductionToOrganization()
     //await reductionToItem()
     //await reductionToUser()
     //await reductionToAgentRoute();
-    //await reductionOutAdsXMLShoroAzyk()
+    //await reductionOutAdsXMLShoro()
     //await reductionToAds()
 }
 
