@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 const OrderSchema = mongoose.Schema({
     item: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Item'
+        ref: 'ItemZakajiKz'
     },
     count: Number,
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     consignment: {
         type: Number,
@@ -38,7 +38,7 @@ const OrderSchema = mongoose.Schema({
     status: String,
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     setRoute: {
         type: Boolean,
@@ -46,7 +46,7 @@ const OrderSchema = mongoose.Schema({
     },
     ads: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Ads'
+        ref: 'AdsZakajiKz'
     },
 }, {
     timestamps: true

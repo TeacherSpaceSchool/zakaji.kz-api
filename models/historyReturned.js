@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const HistoryReturnedSchema = mongoose.Schema({
     returned: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Returned'
+        ref: 'ReturnedZakajiKz'
     },
     editor: String,
 }, {

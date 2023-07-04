@@ -4,7 +4,7 @@ const outXMLClientShoroSchema = mongoose.Schema({
     guid: String,
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     exc: String
 }, {

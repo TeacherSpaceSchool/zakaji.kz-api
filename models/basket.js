@@ -3,17 +3,17 @@ const mongoose = require('mongoose');
 const BasketSchema = mongoose.Schema({
     item: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Item'
+        ref: 'ItemZakajiKz'
     },
     count: Number,
     specialPrice: Number,
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     consignment: {
         type: Number,

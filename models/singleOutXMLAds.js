@@ -4,11 +4,11 @@ const singleOutXMLAdsSchema = mongoose.Schema({
     guid: String,
     district: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'District'
+        ref: 'DistrictZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     pass: String,
 

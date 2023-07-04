@@ -6,11 +6,11 @@ const EmploymentSchema = mongoose.Schema({
     phone: [String],
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'UserZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     del: String,
 }, {

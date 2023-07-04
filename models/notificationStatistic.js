@@ -18,7 +18,7 @@ const NotificationStatisticSchema = mongoose.Schema({
     },
     who: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'UserZakajiKz'
     },
 }, {
     timestamps: true

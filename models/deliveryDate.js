@@ -7,11 +7,11 @@ const DeliveryDateSchema = mongoose.Schema({
     },
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     priority: {
         type: Number,

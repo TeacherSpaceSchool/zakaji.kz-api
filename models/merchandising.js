@@ -3,15 +3,15 @@ const mongoose = require('mongoose');
 const MerchandisingSchema = mongoose.Schema({
     employment: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     date: Date,
     productAvailability: [String],

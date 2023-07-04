@@ -12,7 +12,7 @@ const singleOutXMLReturnedSchema = mongoose.Schema({
     exc: String,
     returned: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Returned'
+        ref: 'ReturnedZakajiKz'
     },
     track: {
         type: Number,
@@ -21,7 +21,7 @@ const singleOutXMLReturnedSchema = mongoose.Schema({
     status: String,
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     pass: String,
 }, {

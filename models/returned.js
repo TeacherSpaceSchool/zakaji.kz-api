@@ -4,7 +4,7 @@ const ReturnedSchema = mongoose.Schema({
     items: mongoose.Schema.Types.Mixed,
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     dateDelivery: Date,
     allPrice: Number,
@@ -39,21 +39,21 @@ const ReturnedSchema = mongoose.Schema({
     editor: String,
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     sale: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization',
+        ref: 'OrganizationZakajiKz',
         default: null
     },
     provider: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization',
+        ref: 'OrganizationZakajiKz',
         default: null
     },
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     district: String,
     guid: String,
@@ -64,7 +64,7 @@ const ReturnedSchema = mongoose.Schema({
     },
     forwarder: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
 }, {
     timestamps: true

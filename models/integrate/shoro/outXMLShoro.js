@@ -18,7 +18,7 @@ const outXMLShoroSchema = mongoose.Schema({
     promo: Number,
     invoice: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Invoice'
+        ref: 'InvoiceZakajiKz'
     },
     status: String
 }, {

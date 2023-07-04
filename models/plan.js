@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const PlanSchema = mongoose.Schema({
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     target: {
         type: Number,

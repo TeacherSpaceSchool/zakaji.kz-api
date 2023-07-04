@@ -3,27 +3,27 @@ const mongoose = require('mongoose');
 const Integrate1CSchema = mongoose.Schema({
     item: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Item'
+        ref: 'ItemZakajiKz'
     },
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     ecspeditor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     manager: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     guid: String,
 }, {

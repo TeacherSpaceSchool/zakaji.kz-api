@@ -3,16 +3,16 @@ const mongoose = require('mongoose');
 const AgentRouteSchema = mongoose.Schema({
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     clients: [[{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     }]],
     name: String,
     district: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'District'
+        ref: 'DistrictZakajiKz'
     }
 }, {
     timestamps: true

@@ -5,7 +5,7 @@ const SubscriberSchema = mongoose.Schema({
     keys: mongoose.Schema.Types.Mixed,
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'UserZakajiKz'
     },
     number: String,
     status: String,

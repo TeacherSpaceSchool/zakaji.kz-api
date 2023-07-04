@@ -4,11 +4,11 @@ const DiscountClientSchema = mongoose.Schema({
     discount: Number,
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
 }, {
     timestamps: true

@@ -33,7 +33,7 @@ const ClientSchema = mongoose.Schema({
     device: String,
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'UserZakajiKz'
     },
     notification: {
         type: Boolean,

@@ -12,11 +12,11 @@ const AutoSchema = mongoose.Schema({
     },
     employment: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
 }, {
     timestamps: true

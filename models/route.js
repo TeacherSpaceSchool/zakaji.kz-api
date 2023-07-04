@@ -5,7 +5,7 @@ const RouteSchema = mongoose.Schema({
         legs:[[String]],
         orders: [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Invoice'
+            ref: 'InvoiceZakajiKz'
         }],
         tonnage: {
             type: Number,
@@ -18,27 +18,27 @@ const RouteSchema = mongoose.Schema({
     }],
     provider: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     selectProdusers: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     }],
     selectDistricts: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'District'
+        ref: 'DistrictZakajiKz'
     }],
     selectEcspeditor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     selectAuto: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Auto'
+        ref: 'AutoZakajiKz'
     },
     selectedOrders: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Invoice'
+        ref: 'InvoiceZakajiKz'
     }],
     dateDelivery: Date,
     status: String,

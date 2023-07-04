@@ -18,12 +18,12 @@ const singleOutXMLSchema = mongoose.Schema({
     promo: Number,
     invoice: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Invoice'
+        ref: 'InvoiceZakajiKz'
     },
     status: String,
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     pass: String,
 }, {

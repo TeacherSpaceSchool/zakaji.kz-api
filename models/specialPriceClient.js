@@ -3,16 +3,16 @@ const mongoose = require('mongoose');
 const SpecialPriceClientSchema = mongoose.Schema({
     item: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Item'
+        ref: 'ItemZakajiKz'
     },
     price: Number,
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
 }, {
     timestamps: true

@@ -14,12 +14,12 @@ const AdsSchema = mongoose.Schema({
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     del: String,
     item: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Item'
+        ref: 'ItemZakajiKz'
     },
     count: {
         type: Number,
@@ -29,7 +29,7 @@ const AdsSchema = mongoose.Schema({
     targetItems: [{
         xids: [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Item',
+            ref: 'ItemZakajiKz',
             default: []
         }],
         count: {

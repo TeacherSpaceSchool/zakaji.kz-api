@@ -11,7 +11,7 @@ const outXMLReturnedShoroSchema = mongoose.Schema({
     exc: String,
     returned: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Returned'
+        ref: 'ReturnedZakajiKz'
     },
     track: {
         type: Number,

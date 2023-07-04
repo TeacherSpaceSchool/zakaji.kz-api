@@ -3,19 +3,19 @@ const mongoose = require('mongoose');
 const FormSchema = mongoose.Schema({
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     templateForm: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'TemplateForm'
+        ref: 'TemplateFormZakajiKz'
     },
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     questions: [{
         formType: String,

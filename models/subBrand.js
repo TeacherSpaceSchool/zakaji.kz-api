@@ -10,7 +10,7 @@ const SubBrandSchema = mongoose.Schema({
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     del: String,
     cities: [String]

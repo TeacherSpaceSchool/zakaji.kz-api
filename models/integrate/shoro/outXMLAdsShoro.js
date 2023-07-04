@@ -4,7 +4,7 @@ const OutXMLAdsShoroSchema = mongoose.Schema({
     guid: String,
     district: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'District'
+        ref: 'DistrictZakajiKz'
     },
 
 }, {

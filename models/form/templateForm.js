@@ -4,7 +4,7 @@ const TemplateFormSchema = mongoose.Schema({
     title: String,
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     editorEmployment: Boolean,
     editorClient: Boolean,

@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 const AgentHistoryGeoSchema = mongoose.Schema({
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     geo: String
 }, {

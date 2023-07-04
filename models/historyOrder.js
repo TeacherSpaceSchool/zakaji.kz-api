@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const HistoryOrderSchema = mongoose.Schema({
     invoice: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Invoice'
+        ref: 'InvoiceZakajiKz'
     },
     orders: mongoose.Schema.Types.Mixed,
     editor: String,

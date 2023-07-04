@@ -3,15 +3,15 @@ const mongoose = require('mongoose');
 const DistributerSchema = mongoose.Schema({
     distributer: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     sales: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     }],
     provider: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     }],
 }, {
     timestamps: true

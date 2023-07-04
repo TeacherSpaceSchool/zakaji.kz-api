@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 const InvoiceSchema = mongoose.Schema({
     orders: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Order'
+        ref: 'OrderZakajiKz'
     }],
     adss: [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Ads'
+            ref: 'AdsZakajiKz'
         }],
     priority: {
         type: Number,
@@ -15,7 +15,7 @@ const InvoiceSchema = mongoose.Schema({
     },
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client'
+        ref: 'ClientZakajiKz'
     },
     allPrice: Number,
     consignmentPrice: {
@@ -69,7 +69,7 @@ const InvoiceSchema = mongoose.Schema({
     },
     forwarder: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     taken: {
         type: Boolean,
@@ -85,25 +85,25 @@ const InvoiceSchema = mongoose.Schema({
     editor: String,
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     distributer: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization',
+        ref: 'OrganizationZakajiKz',
         default: null
     },
     provider: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization',
+        ref: 'OrganizationZakajiKz',
         default: null
     },
     sale: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization',
+        ref: 'OrganizationZakajiKz',
         default: null
     },
     who: mongoose.Schema.Types.ObjectId

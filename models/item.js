@@ -23,15 +23,15 @@ const ItemSchema = mongoose.Schema({
     },
     subCategory: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'SubCategory'
+        ref: 'SubCategoryZakajiKz'
     },
     subBrand: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'SubBrand'
+        ref: 'SubBrandZakajiKz'
     },
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     hit: Boolean,
     latest: Boolean,

@@ -4,7 +4,7 @@ const LotterySchema = mongoose.Schema({
     image: String,
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     status: String,
     text: String,
@@ -23,7 +23,7 @@ const LotterySchema = mongoose.Schema({
         number: String,
         client: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Client'
+            ref: 'ClientZakajiKz'
         },
         prize: String
     }]

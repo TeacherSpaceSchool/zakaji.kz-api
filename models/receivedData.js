@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 const ReceivedDataSchema = mongoose.Schema({
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
+        ref: 'OrganizationZakajiKz'
     },
     guid: String,
     name: String,
     addres: String,
     agent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employment'
+        ref: 'EmploymentZakajiKz'
     },
     phone: String,
     type: String,
