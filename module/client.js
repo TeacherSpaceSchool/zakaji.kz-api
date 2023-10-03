@@ -1,10 +1,6 @@
-const Client = require('../models/client');
+const User = require('../models/user');
 
 module.exports.reductionToClient = async() => {
-    let clients = await Client.find({city: {$ne: 'Алматы'}})
-    console.log(`reductionToClient: ${clients.length}`)
-    for(let i = 0; i<clients.length;i++){
-        clients[i].city = 'Алматы'
-        await clients[i].save();
-    }
+    let date = new Date('2023-08-01T03:00:00.000Z')
+    console.log(`reductionToClient: ${(await User.updateMany({status: 'deactive', createdAt: {$lte: date}}, {status: 'active'})).n}`)
 }

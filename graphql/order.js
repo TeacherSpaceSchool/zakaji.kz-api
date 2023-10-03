@@ -22,6 +22,7 @@ const maxDates = 90
 const { checkAdss } = require('../graphql/ads');
 const SpecialPriceClient = require('../models/specialPriceClient');
 const uuidv1 = require('uuid/v1.js');
+const ModelsError = require('../models/error');
 
 const type = `
   type Order {
@@ -695,7 +696,7 @@ const resolvers = {
                 taken: true,
                 distributed: {$ne: true},
                 organization: {$in: produsers},
-                    ...clients.length>0?{client: {$in: clients}}:{},
+                ...clients.length>0?{client: {$in: clients}}:{},
                 ...dateDelivery?{$and: [{dateDelivery: {$gte: dateStart}}, {dateDelivery: {$lt: dateEnd}}]}:{$and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt: dateEnd}}]}
             })
                 .select('_id agent createdAt updatedAt allTonnage allSize client allPrice consignmentPrice returnedPrice address adss editor number confirmationForwarder confirmationClient cancelClient district track forwarder  sale provider organization cancelForwarder paymentConsignation taken sync dateDelivery')
@@ -1069,17 +1070,35 @@ const setOrder = async ({orders, invoice, user}) => {
     });
     await HistoryOrder.create(objectHistoryOrder);
 
-    let date = new Date()
-    date.setDate(date.getDate() - 7)
-    if((resInvoice.guid||resInvoice.dateDelivery>date)&&resInvoice.organization.pass&&resInvoice.organization.pass.length){
-        if(resInvoice.orders[0].status==='принят') {
-            const { setSingleOutXML } = require('../module/singleOutXML');
-            resInvoice.sync = await setSingleOutXML(resInvoice)
+    let dateDelivery = new Date()
+    dateDelivery.setDate(dateDelivery.getDate() - 7)
+    if((resInvoice.guid||resInvoice.dateDelivery>dateDelivery)) {
+        if(resInvoice.organization.pass&&resInvoice.organization.pass.length) {
+            if (resInvoice.orders[0].status === 'принят') {
+                const {setSingleOutXML} = require('../module/singleOutXML');
+                resInvoice.sync = await setSingleOutXML(resInvoice, true)
+            }
+            else if (resInvoice.orders[0].status === 'отмена') {
+                const {cancelSingleOutXML} = require('../module/singleOutXML');
+                resInvoice.sync = await cancelSingleOutXML(resInvoice)
+            }
         }
-        else if(resInvoice.orders[0].status==='отмена') {
-            const { cancelSingleOutXML } = require('../module/singleOutXML');
-            resInvoice.sync = await cancelSingleOutXML(resInvoice)
+        ///заглушка
+        else {
+            let _object = new ModelsError({
+                err: `${resInvoice.number} Отсутствует organization.pass ${resInvoice.organization.pass}`,
+                path: 'setOrder'
+            });
+            await ModelsError.create(_object)
         }
+    }
+    ///заглушка
+    else {
+        let _object = new ModelsError({
+            err: `${resInvoice.number} Отсутствует guid`,
+            path: 'setOrder'
+        });
+        await ModelsError.create(_object)
     }
 
     let superDistrict = await District.findOne({
@@ -1116,16 +1135,16 @@ const setOrder = async ({orders, invoice, user}) => {
     }
 
     pubsub.publish(RELOAD_ORDER, { reloadOrder: {
-        who: user.role==='admin'?null:user._id,
-        client: resInvoice.client._id,
-        agent: district?district.agent:undefined,
-        superagent: superDistrict?superDistrict.agent:undefined,
-        organization: resInvoice.organization._id,
-        distributer: district&&district.organization.toString()!==resInvoice.organization._id.toString()?district.organization:undefined,
-        invoice: resInvoice,
-        manager: district?district.manager:undefined,
-        type: 'SET'
-    } });
+            who: user.role==='admin'?null:user._id,
+            client: resInvoice.client._id,
+            agent: district?district.agent:undefined,
+            superagent: superDistrict?superDistrict.agent:undefined,
+            organization: resInvoice.organization._id,
+            distributer: district&&district.organization.toString()!==resInvoice.organization._id.toString()?district.organization:undefined,
+            invoice: resInvoice,
+            manager: district?district.manager:undefined,
+            type: 'SET'
+        } });
     return resInvoice
 }
 
@@ -1233,18 +1252,20 @@ const setInvoice = async ({adss, taken, invoice, confirmationClient, confirmatio
 const resolversMutation = {
     acceptOrders: async(parent, ctx, {user}) => {
         if(user.role==='admin'){
-            let date = new Date()
-            date.setMinutes(date.getMinutes()-10)
+            let dateDelivery = new Date()
+            dateDelivery.setDate(dateDelivery.getDate() - 7)
+            let dateEnd = new Date()
+            dateEnd.setMinutes(dateEnd.getMinutes()-10)
             let organizations = await Organization.find({autoAcceptNight: true}).distinct('_id').lean()
-            let orders = await Invoice.find({
+            let invoices = await Invoice.find({
                 del: {$ne: 'deleted'},
                 taken: {$ne: true},
                 cancelClient: null,
                 cancelForwarder: null,
-                createdAt: {$lte: date},
+                createdAt: {$lte: dateEnd},
                 organization: {$in: organizations}
             })
-            //.select('client organization orders dateDelivery paymentMethod number _id inv')
+                //.select('client organization orders dateDelivery paymentMethod number _id inv')
                 .populate({
                     path: 'client',
                     //  select: '_id'
@@ -1265,17 +1286,35 @@ const resolversMutation = {
                 .populate({path: 'provider'})
                 .populate({path: 'sale'})
                 .populate({path: 'forwarder'})
-            for(let i = 0; i<orders.length;i++) {
-                orders[i].taken = true
-                await Order.updateMany({_id: {$in: orders[i].orders.map(element=>element._id)}}, {status: 'принят'})
-                orders[i].adss = await checkAdss(orders[i]._id)
-                if(orders[i].organization.pass&&orders[i].organization.pass.length){
-                    orders[i].sync = await setSingleOutXML(orders[i])
+            for(let i = 0; i<invoices.length;i++) {
+                invoices[i].taken = true
+                await Order.updateMany({_id: {$in: invoices[i].orders.map(element=>element._id)}}, {status: 'принят'})
+                invoices[i].adss = await checkAdss(invoices[i]._id)
+                if(invoices[i].guid||invoices[i].dateDelivery>dateDelivery) {
+                    if (invoices[i].organization.pass && invoices[i].organization.pass.length) {
+                        invoices[i].sync = await setSingleOutXML(invoices[i])
+                    }
+                    ///заглушка
+                    else {
+                        let _object = new ModelsError({
+                            err: `${invoices[i].number} Отсутствует organization.pass ${invoices[i].organization.pass}`,
+                            path: 'acceptOrders'
+                        });
+                        await ModelsError.create(_object)
+                    }
                 }
-                orders[i].editor = 'админ'
+                ///заглушка
+                else {
+                    let _object = new ModelsError({
+                        err: `${invoices[i].number} Отсутствует guid`,
+                        path: 'acceptOrders'
+                    });
+                    await ModelsError.create(_object)
+                }
+                invoices[i].editor = 'админ'
                 let objectHistoryOrder = new HistoryOrder({
-                    invoice: orders[i]._id,
-                    orders: orders[i].orders.map(order=>{
+                    invoice: invoices[i]._id,
+                    orders: invoices[i].orders.map(order=>{
                         return {
                             item: order.name,
                             count: order.count,
@@ -1286,19 +1325,19 @@ const resolversMutation = {
                     editor: 'админ',
                 });
                 await HistoryOrder.create(objectHistoryOrder);
-                await orders[i].save()
-                orders[i].adss = await Ads.find({_id: {$in: orders[i].adss}})
+                await invoices[i].save()
+                invoices[i].adss = await Ads.find({_id: {$in: invoices[i].adss}})
                 pubsub.publish(RELOAD_ORDER, { reloadOrder: {
-                    who: null,
-                    client: orders[i].client._id,
-                    agent: orders[i].agent?orders[i].agent._id:undefined,
-                    superagent: undefined,
-                    organization: orders[i].organization._id,
-                    distributer: undefined,
-                    invoice: orders[i],
-                    manager: undefined,
-                    type: 'SET'
-                } });
+                        who: null,
+                        client: invoices[i].client._id,
+                        agent: invoices[i].agent?invoices[i].agent._id:undefined,
+                        superagent: undefined,
+                        organization: invoices[i].organization._id,
+                        distributer: undefined,
+                        invoice: invoices[i],
+                        manager: undefined,
+                        type: 'SET'
+                    } });
             }
         }
         return {data: 'OK'};
@@ -1549,16 +1588,16 @@ const resolversMutation = {
                 .populate({path: 'forwarder', select: '_id name'})
                 .lean()
             pubsub.publish(RELOAD_ORDER, { reloadOrder: {
-                who: user.role==='admin'?null:user._id,
-                agent: districtSales?districtSales.agent:undefined,
-                superagent: superDistrict?superDistrict.agent:undefined,
-                client: client._id,
-                organization: organization,
-                invoice: newInvoice,
-                distributer: districtSales&&districtSales.organization.toString()!==organization.toString()?districtSales.organization:undefined,
-                manager: districtSales?districtSales.manager:undefined,
-                type: 'ADD'
-            } });
+                    who: user.role==='admin'?null:user._id,
+                    agent: districtSales?districtSales.agent:undefined,
+                    superagent: superDistrict?superDistrict.agent:undefined,
+                    client: client._id,
+                    organization: organization,
+                    invoice: newInvoice,
+                    distributer: districtSales&&districtSales.organization.toString()!==organization.toString()?districtSales.organization:undefined,
+                    manager: districtSales?districtSales.manager:undefined,
+                    type: 'ADD'
+                } });
             await Basket.deleteMany({_id: {$in: baskets.map(element=>element._id)}})
         }
         return {data: 'OK'};
@@ -1602,16 +1641,16 @@ const resolversMutation = {
                         .lean()
                 }
                 pubsub.publish(RELOAD_ORDER, { reloadOrder: {
-                    who: user.role==='admin'?null:user._id,
-                    client: objects[i].client,
-                    agent: district?district.agent:undefined,
-                    superagent: superDistrict?superDistrict.agent:undefined,
-                    organization: objects[i].organization,
-                    invoice: {_id: objects[i]._id},
-                    distributer: district&&district.organization.toString()!==objects[i].organization.toString()?district.organization:undefined,
-                    manager: district?district.manager:undefined,
-                    type: 'DELETE'
-                } });
+                        who: user.role==='admin'?null:user._id,
+                        client: objects[i].client,
+                        agent: district?district.agent:undefined,
+                        superagent: superDistrict?superDistrict.agent:undefined,
+                        organization: objects[i].organization,
+                        invoice: {_id: objects[i]._id},
+                        distributer: district&&district.organization.toString()!==objects[i].organization.toString()?district.organization:undefined,
+                        manager: district?district.manager:undefined,
+                        type: 'DELETE'
+                    } });
             }
         }
         return {data: 'OK'};
@@ -1673,16 +1712,16 @@ const resolversMutation = {
             }
             for(let i=0; i<resInvoices.length; i++){
                 pubsub.publish(RELOAD_ORDER, { reloadOrder: {
-                    who: user.role==='admin'?null:user._id,
-                    client: resInvoices[i].client._id,
-                    agent: district?district.agent:undefined,
-                    superagent: superDistrict?superDistrict.agent:undefined,
-                    organization: resInvoices[i].organization._id,
-                    distributer: district&&district.organization.toString()!==resInvoices[i].organization._id.toString()?district.organization:undefined,
-                    invoice: resInvoices[i],
-                    manager: district?district.manager:undefined,
-                    type: 'SET'
-                } });
+                        who: user.role==='admin'?null:user._id,
+                        client: resInvoices[i].client._id,
+                        agent: district?district.agent:undefined,
+                        superagent: superDistrict?superDistrict.agent:undefined,
+                        organization: resInvoices[i].organization._id,
+                        distributer: district&&district.organization.toString()!==resInvoices[i].organization._id.toString()?district.organization:undefined,
+                        invoice: resInvoices[i],
+                        manager: district?district.manager:undefined,
+                        type: 'SET'
+                    } });
             }
         }
         return {data: 'OK'};

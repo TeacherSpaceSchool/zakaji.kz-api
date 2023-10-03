@@ -20,6 +20,7 @@ const { startClientRedis } = require('../module/redis');
 const { reductionToUser, createAdmin } = require('../module/user');
 const { Worker, isMainThread } = require('worker_threads');
 const Organization = require('../models/organization');
+const District = require('../models/district');
 const Invoice = require('../models/invoice');
 const Order = require('../models/order');
 const { setSingleOutXML } = require('../module/singleOutXML');
@@ -106,7 +107,7 @@ let start = async () => {
     await reductionCategory()
     await reductionSubCategory()
     //await reductionToRoute()
-    //await reductionToClient()
+    await reductionToClient()
     //await reductionToOrganization()
     //await reductionToItem()
     //await reductionToUser()

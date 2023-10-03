@@ -8,6 +8,7 @@ const AgentRoute = require('../models/agentRoute');
 const Employment = require('../models/employment');
 const User = require('../models/user');
 const OutXMLAdsShoro = require('../models/integrate/shoro/outXMLAdsShoro');
+const SubBrand = require('../models/subBrand');
 
 const type = `
   type District {
@@ -25,6 +26,7 @@ const type = `
 const query = `
     districts(organization: ID, search: String!, sort: String!): [District]
     district(_id: ID): District
+    clientDistrict(organization: ID!): District
     sortDistrict: [Sort]
     clientsWithoutDistrict(organization: ID, city: String): [Client]
 `;
@@ -175,6 +177,31 @@ const resolvers = {
                     select: 'name _id'
                 })
                 .lean()
+        }
+    },
+    clientDistrict: async(parent, {organization}, {user}) => {
+        if('client'===user.role) {
+            let subBrand = await SubBrand.findOne({_id: organization}).select('organization').lean()
+            if(subBrand) organization = subBrand.organization
+            const res = await District.findOne({
+                client: user.client,
+                organization
+            })
+                .select('organization agent manager ecspeditor')
+                .populate({
+                    path: 'agent',
+                    select: 'name phone'
+                })
+                .populate({
+                    path: 'manager',
+                    select: 'name phone'
+                })
+                .populate({
+                    path: 'ecspeditor',
+                    select: 'name phone'
+                })
+                .lean()
+            return res
         }
     },
     sortDistrict: async() => {

@@ -1,3 +1,8 @@
+//5e3fc975934d024d86c66bd9
+//7 931 829 сом
+//5 682 шт
+//Иязов Адилет 0 702 533 146
+//Баялиев Адилет
 const Invoice = require('../models/invoice');
 const Integrate1C = require('../models/integrate1C');
 const Order = require('../models/order');
@@ -25,6 +30,7 @@ const AgentHistoryGeo = require('../models/agentHistoryGeo');
 const Auto = require('../models/auto');
 const SubCategory = require('../models/subCategory');
 const mongoose = require('mongoose');
+const os = require('os');
 
 const type = `
     type Statistic {
@@ -69,6 +75,7 @@ const query = `
     statisticSubBrand(company: String, dateStart: Date, dateType: String, online: Boolean, city: String): Statistic
     statisticHours(organization: ID!, dateStart: Date, dateType: String, city: String, type: String!): Statistic
     statisticZakajiKzOrder(company: ID, filter: String, dateStart: Date, dateType: String, city: String): Statistic
+    statisticUnsyncOrder(dateStart: Date, city: String): Statistic
     statisticZakajiKzAgents(company: ID, dateStart: Date, dateType: String, filter: String, city: String): Statistic
     statisticZakajiKzAgent(agent: ID!, dateStart: Date, dateType: String): Statistic
     statisticClient(client: ID!, dateStart: Date, dateType: String, online: Boolean): Statistic
@@ -88,9 +95,11 @@ const query = `
     statisticStorageSize: Statistic
     statisticClientCity: Statistic
     checkIntegrateClient(organization: ID, type: String, document: Upload): Statistic
+    statisticRAM: [String]
 `;
 
 const mutation = `
+    repairUnsyncOrder(ids: [ID]!): Data
     uploadingClients(document: Upload!, organization: ID!, city: String!): Data
     uploadingItems(document: Upload!, organization: ID!, city: String!): Data
     uploadingDistricts(document: Upload!, organization: ID!): Data
@@ -212,11 +221,25 @@ const resolvers = {
                 }
                 await deleteFile(filename)
                 return {
-                    columns: ['GUID', 'ZAKAJI.KZ', '1C'],
+                    columns: ['GUID', '.ZakajiKz', '1C'],
                     row: statistic
                 };
 
             }
+        }
+    },
+    statisticRAM: async(parent, args, {user}) => {
+        if(user.role==='admin'){
+            let totalmem = os.totalmem()
+            let freemem = os.freemem()
+            let usemem = totalmem - freemem
+            totalmem = totalmem/1024/1024/1024
+            totalmem = Math.round(totalmem * 10)/10
+            freemem = freemem/1024/1024/1024
+            freemem = Math.round(freemem * 10)/10
+            usemem = usemem/1024/1024/1024
+            usemem = Math.round(usemem * 10)/10
+            return [`${totalmem}GB`, `${usemem}GB`, `${freemem}GB`]
         }
     },
     checkAgentRoute: async(parent, { agentRoute }, {user}) => {
@@ -283,7 +306,7 @@ const resolvers = {
             let problem = ''
             let repeat = 0
             let noSync = 0
-                let data = await Invoice.find(
+            let data = await Invoice.find(
                 {
                     $and: [
                         {createdAt: {$gte: yesterday}},
@@ -313,12 +336,12 @@ const resolvers = {
                     if(problem)repeat+=1
                     if(data[i].sync!==2)noSync+=1
                     statistic.push({_id: i, data: [
-                        data[i].number,
-                        `${data[i].client.name}${data[i].client.address&&data[i].client.address[0]?` (${data[i].client.address[0][2]?`${data[i].client.address[0][2]}, `:''}${data[i].client.address[0][0]})`:''}`,
-                        data[i].organization.name,
-                        pdDDMMYYHHMM(data[i].createdAt),
-                        `${problem ? 'повторяющийся' : ''}${problem&&data[i].sync !== 2?', ':''}${data[i].sync !== 2 ? 'несинхронизирован' : ''}`
-                    ]})
+                            data[i].number,
+                            `${data[i].client.name}${data[i].client.address&&data[i].client.address[0]?` (${data[i].client.address[0][2]?`${data[i].client.address[0][2]}, `:''}${data[i].client.address[0][0]})`:''}`,
+                            data[i].organization.name,
+                            pdDDMMYYHHMM(data[i].createdAt),
+                            `${problem ? 'повторяющийся' : ''}${problem&&data[i].sync !== 2?', ':''}${data[i].sync !== 2 ? 'несинхронизирован' : ''}`
+                        ]})
                 }
             }
             statistic = [
@@ -1278,33 +1301,33 @@ const resolvers = {
                 })
                 .lean()
             for(let i=0; i<data.length; i++) {
-                    for(let i1=0; i1<data[i].adss.length; i1++) {
-                        if (!statistic[data[i].adss[i1]._id]) statistic[data[i].adss[i1]._id] = {
-                            profit: 0,
-                            returned: 0,
-                            complet: [],
-                            consignmentPrice: 0,
-                            ads: data[i].adss[i1].title
-                        }
-                        if(data[i].allPrice!==data[i].returnedPrice&&!statistic[data[i].adss[i1]._id].complet.includes(data[i]._id.toString()))
-                            statistic[data[i].adss[i1]._id].complet.push(data[i]._id.toString())
-
-                        if(!completAll.includes(data[i]._id.toString())) {
-                            completAll.push(data[i]._id.toString())
-                            if (data[i].consignmentPrice && !data[i].paymentConsignation) {
-                                allConsignment += data[i].consignmentPrice
-                            }
-                            profitAll += data[i].allPrice - data[i].returnedPrice
-                            returnedAll += data[i].returnedPrice
-                        }
-
-                        statistic[data[i].adss[i1]._id].profit += data[i].allPrice - data[i].returnedPrice
-                        statistic[data[i].adss[i1]._id].returned += data[i].returnedPrice
-
-                        if (data[i].consignmentPrice && !data[i].paymentConsignation) {
-                            statistic[data[i].adss[i1]._id].consignmentPrice += data[i].consignmentPrice
-                        }
+                for(let i1=0; i1<data[i].adss.length; i1++) {
+                    if (!statistic[data[i].adss[i1]._id]) statistic[data[i].adss[i1]._id] = {
+                        profit: 0,
+                        returned: 0,
+                        complet: [],
+                        consignmentPrice: 0,
+                        ads: data[i].adss[i1].title
                     }
+                    if(data[i].allPrice!==data[i].returnedPrice&&!statistic[data[i].adss[i1]._id].complet.includes(data[i]._id.toString()))
+                        statistic[data[i].adss[i1]._id].complet.push(data[i]._id.toString())
+
+                    if(!completAll.includes(data[i]._id.toString())) {
+                        completAll.push(data[i]._id.toString())
+                        if (data[i].consignmentPrice && !data[i].paymentConsignation) {
+                            allConsignment += data[i].consignmentPrice
+                        }
+                        profitAll += data[i].allPrice - data[i].returnedPrice
+                        returnedAll += data[i].returnedPrice
+                    }
+
+                    statistic[data[i].adss[i1]._id].profit += data[i].allPrice - data[i].returnedPrice
+                    statistic[data[i].adss[i1]._id].returned += data[i].returnedPrice
+
+                    if (data[i].consignmentPrice && !data[i].paymentConsignation) {
+                        statistic[data[i].adss[i1]._id].consignmentPrice += data[i].consignmentPrice
+                    }
+                }
             }
             const keys = Object.keys(statistic)
             data = []
@@ -1644,8 +1667,8 @@ const resolvers = {
                                 }]})
                             .lean()
                         for (let i1 = 0; i1 < data.length; i1++) {
-                            let name = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent.name:'ZAKAJI.KZ'
-                            let id = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent._id:'ZAKAJI.KZ'
+                            let name = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent.name:'.ZakajiKz'
+                            let id = data[i1].agent&&data[i1].agent.organization&&data[i1].agent.organization.toString()===distributer.toString()?data[i1].agent._id:'.ZakajiKz'
                             if (!statistic[id]) statistic[id] = {
                                 profit: 0,
                                 returned: 0,
@@ -2362,6 +2385,43 @@ const resolvers = {
             };
         }
     },
+    statisticUnsyncOrder: async(parent, { dateStart, city }, {user}) => {
+        if(['admin'].includes(user.role)){
+            let res = [], data = []
+            let organizations = await Organization.find({pass: {$nin: ['', null]}}).distinct('_id').lean()
+            if(!dateStart) dateStart = new Date('2023-01-01T03:00:00.000Z')
+            data = await Invoice.find(
+                {
+                    createdAt: {$gte: dateStart},
+                    sync: {$nin: [1, 2]},
+                    cancelClient: null,
+                    cancelForwarder: null,
+                    del: {$ne: 'deleted'},
+                    taken: true,
+                    organization: {$in: organizations},
+                    ...city?{city: city}:{},
+                }
+            )
+                .select('_id number createdAt updatedAt editor')
+                .sort('-createdAt')
+                .lean()
+            for(let i=0; i<data.length; i++){
+                res.push({
+                    _id: data[i]['_id'],
+                    data: [
+                        data[i]['number'],
+                        pdDDMMYYHHMM(data[i]['createdAt']),
+                        pdDDMMYYHHMM(data[i]['updatedAt']),
+                        data[i]['editor'],
+                    ]
+                })
+            }
+            return {
+                columns: ['номер', 'создан', 'изменен', 'пользователь'],
+                row: res
+            };
+        }
+    },
     statisticMerchandising: async(parent, { dateStart, dateType, organization, agent }, {user}) => {
         if(['admin', 'суперорганизация', 'организация', 'менеджер'].includes(user.role)){
             let dateEnd
@@ -2540,7 +2600,7 @@ const resolvers = {
             let data = await Client.find({device: {$ne: null}})
                 .select('device')
                 .lean()
-            let device
+            let device = ''
             for(let i=0; i<data.length; i++) {
                 if(filter==='device')
                     device = data[i].device.split(' | ')[0]
@@ -2553,7 +2613,7 @@ const resolvers = {
                 else if(filter==='browser-version')
                     device = data[i].device.split(' | ')[2]
                 else if(filter==='company') {
-                        device = data[i].device.toLowerCase()
+                    device = data[i].device.toLowerCase()
                     if(device.includes('apple'))
                         device = 'Apple'
                     else if(device.includes('redmi')||device.includes('mi')||device.includes('xiaomi')||device.includes('m2003j15sc')||device.includes('m2004j19c')||device.includes('poco')||device.includes('pocophone'))
@@ -2582,8 +2642,6 @@ const resolvers = {
                         device = 'OnePlus'
                     else if(device.includes('lenovo'))
                         device = 'Lenovo'
-                    else
-                        device = device
                 }
                 if(device&&device.length) {
                     if (!statistic[device]) statistic[device] = {count: 0, name: device}
@@ -2672,12 +2730,12 @@ const resolvers = {
                     .lean()
 
                 for(let i=0; i<data.length; i++) {
-                        if (!statistic[data[i].organization._id]) statistic[data[i].organization._id] = {
-                            profit: 0,
-                            complet: 0,
-                            organization: data[i].organization.name
-                        }
-                        statistic[data[i].organization._id].complet+=1
+                    if (!statistic[data[i].organization._id]) statistic[data[i].organization._id] = {
+                        profit: 0,
+                        complet: 0,
+                        organization: data[i].organization.name
+                    }
+                    statistic[data[i].organization._id].complet+=1
                     profitAll += data[i].allPrice
                     statistic[data[i].organization._id].profit += data[i].allPrice
                     completAll += 1
@@ -2862,7 +2920,7 @@ const resolvers = {
                     .lean()
 
                 for(let i=0; i<data.length; i++) {
-                    let agent = !data[i].agent||['суперменеджер', 'суперагент', 'суперэкспедитор'].includes(data[i].agent.user.role)?{_id: 'ZAKAJI.KZ', name: 'ZAKAJI.KZ'}:{name: data[i].agent.name, _id: data[i].agent._id.toString()}
+                    let agent = !data[i].agent||['суперменеджер', 'суперагент', 'суперэкспедитор'].includes(data[i].agent.user.role)?{_id: '.ZakajiKz', name: '.ZakajiKz'}:{name: data[i].agent.name, _id: data[i].agent._id.toString()}
 
                     if(!statistic[agent._id]) {
                         statistic[agent._id] = {
@@ -3004,8 +3062,8 @@ const resolvers = {
                     let id
                     let name
                     if(filter==='агент'){
-                        name = data[i].agent?data[i].agent.name:'ZAKAJI.KZ'
-                        id = data[i].agent?data[i].agent._id:'ZAKAJI.KZ'
+                        name = data[i].agent?data[i].agent.name:'.ZakajiKz'
+                        id = data[i].agent?data[i].agent._id:'.ZakajiKz'
                     }
                     else{
                         type = data[i].agent?'оффлайн':'онлайн'
@@ -3047,8 +3105,8 @@ const resolvers = {
             }
             else {
                 for(let i=0; i<data.length; i++) {
-                    let name = data[i].agent?data[i].agent.name:'ZAKAJI.KZ'
-                    let id = data[i].agent?data[i].agent._id:'ZAKAJI.KZ'
+                    let name = data[i].agent?data[i].agent.name:'.ZakajiKz'
+                    let id = data[i].agent?data[i].agent._id:'.ZakajiKz'
                     if (!statistic[id])
                         statistic[id] = {
                             price: 0,
@@ -3514,12 +3572,12 @@ const resolvers = {
                 del: {$ne: 'deleted'},
                 ...city?{city: city}:{},
                 ...search&&search.length?{$or: [
-                    {name: {'$regex': search, '$options': 'i'}},
-                    {email: {'$regex': search, '$options': 'i'}},
-                    {city: {'$regex': search, '$options': 'i'}},
-                    {info: {'$regex': search, '$options': 'i'}},
-                    {address: {$elemMatch: {$elemMatch: {'$regex': search, '$options': 'i'}}}},
-                ]}:{}
+                        {name: {'$regex': search, '$options': 'i'}},
+                        {email: {'$regex': search, '$options': 'i'}},
+                        {city: {'$regex': search, '$options': 'i'}},
+                        {info: {'$regex': search, '$options': 'i'}},
+                        {address: {$elemMatch: {$elemMatch: {'$regex': search, '$options': 'i'}}}},
+                    ]}:{}
             })
                 .select('address name _id notification lastActive')
                 .lean()
@@ -4564,6 +4622,22 @@ const resolvers = {
 };
 
 const resolversMutation = {
+    repairUnsyncOrder: async(parent, { ids }, {user}) => {
+        if (user.role === 'admin') {
+            const orders = await Invoice.find({
+                _id: {$in: ids}
+            })
+                .distinct('orders')
+                .lean()
+            await Order.updateMany({_id: {$in: orders}}, {status: 'обработка'})
+            await Invoice.updateMany({_id: {$in: ids}}, {
+                taken: false,
+                cancelClient: null,
+                cancelForwarder: null,
+            })
+            return ({data: 'OK'})
+        }
+    },
     uploadingItems: async(parent, { document, organization, city }, {user}) => {
         if (user.role === 'admin') {
             let item, integrate1C

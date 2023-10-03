@@ -193,12 +193,15 @@ const resolvers = {
     },
     organization: async(parent, {_id}) => {
         if(mongoose.Types.ObjectId.isValid(_id)) {
-            let subBrand = await SubBrand.findOne({_id: _id}).select('organization name').lean()
+            let subBrand = await SubBrand.findOne({_id: _id}).select('organization name minimumOrder').lean()
             let organization = await Organization.findOne({
                 _id: subBrand?subBrand.organization:_id
             })
                 .lean()
-            if(subBrand) organization.name = `${subBrand.name} (${organization.name})`
+            if(subBrand) {
+                organization.name = `${subBrand.name} (${organization.name})`
+                if(subBrand.minimumOrder) organization.minimumOrder = subBrand.minimumOrder
+            }
             return organization
         }
     },
@@ -339,8 +342,8 @@ const resolversMutation = {
                     ]
                 })
                 for(let i=0; i<distributers.length; i++){
-                        distributers[i].sales.splice(_id[i], 1)
-                        distributers[i].provider.splice(_id[i], 1)
+                    distributers[i].sales.splice(_id[i], 1)
+                    distributers[i].provider.splice(_id[i], 1)
                     await distributers[i].save()
                 }
                 await Auto.deleteMany({organization: _id[i]})

@@ -13,6 +13,7 @@ const uuidv1 = require('uuid/v1.js');
 const builder = require('xmlbuilder');
 const paymentMethod = {'Наличные': 0, 'Перечисление': 1, 'Консигнация': 5}
 const { checkFloat } = require('../module/const');
+const ModelsError = require('../models/error');
 
 module.exports.setSingleOutXMLReturned = async(returned) => {
     let outXMLReturned = await SingleOutXMLReturned
@@ -91,88 +92,141 @@ module.exports.setSingleOutXMLReturned = async(returned) => {
     }
 }
 
-module.exports.setSingleOutXML = async(invoice) => {
-    let count
-    let price
-    let outXML = await SingleOutXML
-        .findOne({invoice: invoice._id})
-    if(outXML){
-        outXML.status = 'update'
-        outXML.data = []
-        for (let i = 0; i < invoice.orders.length; i++) {
-            let guidItem = await Integrate1C
-                .findOne({$and: [{item: invoice.orders[i].item._id}, {item: {$ne: null}}]}).select('guid').lean()
-            if(guidItem) {
-                count = invoice.orders[i].count-invoice.orders[i].returned
-                price = checkFloat(invoice.orders[i].allPrice/invoice.orders[i].count)
-                outXML.data.push({
-                    guid: guidItem.guid,
-                    package: Math.round(count / (invoice.orders[i].item.packaging ? invoice.orders[i].item.packaging : 1)),
-                    qt: count,
-                    price: price,
-                    amount: checkFloat(count * price),
-                    priotiry: invoice.orders[i].item.priotiry
-                })
+module.exports.setSingleOutXML = async(invoice, update) => {
+    try {
+        let count
+        let price
+        let outXML = await SingleOutXML
+            .findOne({invoice: invoice._id})
+        if (outXML) {
+            outXML.status = 'update'
+            outXML.data = []
+            for (let i = 0; i < invoice.orders.length; i++) {
+                let guidItem = await Integrate1C
+                    .findOne({$and: [{item: invoice.orders[i].item._id}, {item: {$ne: null}}]}).select('guid').lean()
+                if (guidItem) {
+                    count = invoice.orders[i].count - invoice.orders[i].returned
+                    price = checkFloat(invoice.orders[i].allPrice / invoice.orders[i].count)
+                    outXML.data.push({
+                        guid: guidItem.guid,
+                        package: Math.round(count / (invoice.orders[i].item.packaging ? invoice.orders[i].item.packaging : 1)),
+                        qt: count,
+                        price: price,
+                        amount: checkFloat(count * price),
+                        priotiry: invoice.orders[i].item.priotiry
+                    })
 
-            }
-        }
-        outXML.markModified('data');
-        await outXML.save()
-        await Invoice.updateMany({_id: invoice._id}, {sync: 1})
-        return 1
-    }
-    else {
-        let guidClient = await Integrate1C
-            .findOne({$and: [{client: invoice.client._id}, {client: {$ne: null}}], organization: invoice.organization._id}).select('guid').lean()
-        if(guidClient){
-            let district = await District
-                .findOne({client: invoice.client._id, organization: invoice.organization._id}).select('agent ecspeditor').lean()
-            if(district) {
-                let guidAgent = await Integrate1C
-                    .findOne({$and: [{agent: district.agent}, {agent: {$ne: null}}], organization: invoice.organization._id}).select('guid').lean()
-                let guidEcspeditor = await Integrate1C
-                    .findOne({$and: [{ecspeditor: district.ecspeditor}, {ecspeditor: {$ne: null}}], organization: invoice.organization._id}).select('guid').lean()
-                if(guidAgent&&guidEcspeditor){
-                    guidAgent = guidAgent.guid
-                    guidEcspeditor = guidEcspeditor.guid
-                    let date = new Date(invoice.dateDelivery)
-                    let newOutXML = new SingleOutXML({
-                        payment: paymentMethod[invoice.paymentMethod],
-                        data: [],
-                        guid: invoice.guid?invoice.guid:await uuidv1(),
-                        date: date,
-                        number: invoice.number,
-                        client: guidClient.guid,
-                        agent: guidAgent,
-                        forwarder: guidEcspeditor,
-                        invoice: invoice._id,
-                        status: 'create',
-                        inv: invoice.inv,
-                        organization: invoice.organization._id,
-                        pass: invoice.organization.pass,
-                    });
-                    for (let i = 0; i < invoice.orders.length; i++) {
-                        let guidItem = await Integrate1C
-                            .findOne({$and: [{item: invoice.orders[i].item._id}, {item: {$ne: null}}]}).select('guid').lean()
-                        if (guidItem) {
-                            count = invoice.orders[i].count-invoice.orders[i].returned
-                            price = checkFloat(invoice.orders[i].allPrice/invoice.orders[i].count)
-                            newOutXML.data.push({
-                                guid: guidItem.guid,
-                                package: Math.round(count / (invoice.orders[i].item.packaging ? invoice.orders[i].item.packaging : 1)),
-                                qt: count,
-                                price: price,
-                                amount: checkFloat(count * price),
-                                priotiry: invoice.orders[i].item.priotiry
-                            })
-                        }
-                    }
-                    await SingleOutXML.create(newOutXML);
-                    await Invoice.updateMany({_id: invoice._id}, {sync: 1})
-                    return 1
                 }
             }
+            outXML.markModified('data');
+            await outXML.save()
+            await Invoice.updateMany({_id: invoice._id}, {sync: 1})
+            return 1
         }
+        else {
+            let guidClient = await Integrate1C
+                .findOne({
+                    $and: [{client: invoice.client._id}, {client: {$ne: null}}],
+                    organization: invoice.organization._id
+                }).select('guid').lean()
+            if (guidClient) {
+                let district = await District
+                    .findOne({
+                        client: invoice.client._id,
+                        organization: invoice.organization._id
+                    }).select('agent ecspeditor').lean()
+                if (district) {
+                    let guidAgent = await Integrate1C
+                        .findOne({
+                            $and: [{agent: district.agent}, {agent: {$ne: null}}],
+                            organization: invoice.organization._id
+                        }).select('guid').lean()
+                    let guidEcspeditor = await Integrate1C
+                        .findOne({
+                            $and: [{ecspeditor: district.ecspeditor}, {ecspeditor: {$ne: null}}],
+                            organization: invoice.organization._id
+                        }).select('guid').lean()
+                    if (guidAgent && guidEcspeditor) {
+                        guidAgent = guidAgent.guid
+                        guidEcspeditor = guidEcspeditor.guid
+                        let date = new Date(invoice.dateDelivery)
+                        let newOutXML = new SingleOutXML({
+                            payment: paymentMethod[invoice.paymentMethod],
+                            data: [],
+                            guid: invoice.guid ? invoice.guid : await uuidv1(),
+                            date: date,
+                            number: invoice.number,
+                            client: guidClient.guid,
+                            agent: guidAgent,
+                            forwarder: guidEcspeditor,
+                            invoice: invoice._id,
+                            status: 'create',
+                            inv: invoice.inv,
+                            organization: invoice.organization._id,
+                            pass: invoice.organization.pass,
+                        });
+                        for (let i = 0; i < invoice.orders.length; i++) {
+                            let guidItem = await Integrate1C
+                                .findOne({$and: [{item: invoice.orders[i].item._id}, {item: {$ne: null}}]}).select('guid').lean()
+                            if (guidItem) {
+                                count = invoice.orders[i].count - invoice.orders[i].returned
+                                price = checkFloat(invoice.orders[i].allPrice / invoice.orders[i].count)
+                                newOutXML.data.push({
+                                    guid: guidItem.guid,
+                                    package: Math.round(count / (invoice.orders[i].item.packaging ? invoice.orders[i].item.packaging : 1)),
+                                    qt: count,
+                                    price: price,
+                                    amount: checkFloat(count * price),
+                                    priotiry: invoice.orders[i].item.priotiry
+                                })
+                            }
+                            ///заглушка
+                            else {
+                                let _object = new ModelsError({
+                                    err: `${invoice.number} Отсутствует guidItem`,
+                                    path: 'setSingleOutXML'
+                                });
+                                await ModelsError.create(_object)
+                            }
+                        }
+                        await SingleOutXML.create(newOutXML);
+                        if (update) await Invoice.updateOne({_id: invoice._id}, {sync: 1})
+                        return 1
+                    }
+                    ///заглушка
+                    else {
+                        let _object = new ModelsError({
+                            err: `${invoice.number} Отсутствует guidAgent-${!guidAgent} guidEcspeditor-${!guidEcspeditor}`,
+                            path: 'setSingleOutXML'
+                        });
+                        await ModelsError.create(_object)
+                    }
+                }
+                ///заглушка
+                else {
+                    let _object = new ModelsError({
+                        err: `${invoice.number} Отсутствует district`,
+                        path: 'setSingleOutXML'
+                    });
+                    await ModelsError.create(_object)
+                }
+            }
+            ///заглушка
+            else {
+                let _object = new ModelsError({
+                    err: `${invoice.number} Отсутствует guidClient`,
+                    path: 'setSingleOutXML'
+                });
+                await ModelsError.create(_object)
+            }
+        }
+    }
+    catch (err) {
+        let _object = new ModelsError({
+            err: err.message,
+            path: 'setSingleOutXML'
+        });
+        ModelsError.create(_object)
     }
     return 0
 }
@@ -350,14 +404,14 @@ module.exports.getSingleOutXMLClient = async(pass) => {
     outXMLs = await Client
         .aggregate([
             { $lookup:
-                {
-                    from: User.collection.collectionName,
-                    let: { user: '$user' },
-                    pipeline: [
-                        { $match: {$expr:{$eq:['$$user', '$_id']}} },
-                    ],
-                    as: 'user'
-                }
+                    {
+                        from: User.collection.collectionName,
+                        let: { user: '$user' },
+                        pipeline: [
+                            { $match: {$expr:{$eq:['$$user', '$_id']}} },
+                        ],
+                        as: 'user'
+                    }
             },
             {
                 $unwind:{
@@ -416,32 +470,32 @@ module.exports.getSingleOutXMLReturned = async(pass) => {
         .lean()
     if(outXMLReturneds.length) {
         for(let i=0;i<outXMLReturneds.length;i++){
-        let item = result
-            .ele('item')
-        if(outXMLReturneds[i].status==='del')
-            item.att('del', '1')
-        if (outXMLReturneds[i].inv === 1)
-            item.att('inv', '1')
-        item.att('guid', outXMLReturneds[i].guid)
-        item.att('client', outXMLReturneds[i].client)
-        item.att('agent', outXMLReturneds[i].agent)
-        item.att('forwarder', outXMLReturneds[i].forwarder)
-        item.att('date', pdDDMMYYYY(outXMLReturneds[i].date))
-        item.att('track', outXMLReturneds[i].track?outXMLReturneds[i].track:1)
-        item.att('coment', `${outXMLReturneds[i].returned.info} ${outXMLReturneds[i].returned.address[2]?`${outXMLReturneds[i].returned.address[2]}, `:''}${outXMLReturneds[i].returned.address[0]}`)
+            let item = result
+                .ele('item')
+            if(outXMLReturneds[i].status==='del')
+                item.att('del', '1')
+            if (outXMLReturneds[i].inv === 1)
+                item.att('inv', '1')
+            item.att('guid', outXMLReturneds[i].guid)
+            item.att('client', outXMLReturneds[i].client)
+            item.att('agent', outXMLReturneds[i].agent)
+            item.att('forwarder', outXMLReturneds[i].forwarder)
+            item.att('date', pdDDMMYYYY(outXMLReturneds[i].date))
+            item.att('track', outXMLReturneds[i].track?outXMLReturneds[i].track:1)
+            item.att('coment', `${outXMLReturneds[i].returned.info} ${outXMLReturneds[i].returned.address[2]?`${outXMLReturneds[i].returned.address[2]}, `:''}${outXMLReturneds[i].returned.address[0]}`)
 
-        outXMLReturneds[i].data = outXMLReturneds[i].data.sort(function (a, b) {
-            return checkInt(a.priotiry) - checkInt(b.priotiry)
-        });
+            outXMLReturneds[i].data = outXMLReturneds[i].data.sort(function (a, b) {
+                return checkInt(a.priotiry) - checkInt(b.priotiry)
+            });
 
-        for(let ii=0;ii<outXMLReturneds[i].data.length;ii++){
-            item.ele('product')
-                .att('guid', outXMLReturneds[i].data[ii].guid)
-                .att('qty',  outXMLReturneds[i].data[ii].qt)
-                .att('price', outXMLReturneds[i].data[ii].price)
-                .att('amount', outXMLReturneds[i].data[ii].amount)
+            for(let ii=0;ii<outXMLReturneds[i].data.length;ii++){
+                item.ele('product')
+                    .att('guid', outXMLReturneds[i].data[ii].guid)
+                    .att('qty',  outXMLReturneds[i].data[ii].qt)
+                    .att('price', outXMLReturneds[i].data[ii].price)
+                    .att('amount', outXMLReturneds[i].data[ii].amount)
+            }
         }
-    }
         result = result.end({ pretty: true})
         return result
     }

@@ -12,6 +12,7 @@ const SingleOutXML = require('../models/singleOutXML');
 const SingleOutXMLReturned = require('../models/singleOutXMLReturned');
 const OutXMLShoro = require('../models/integrate/shoro/outXMLShoro');
 const OutXMLReturnedShoro = require('../models/integrate/shoro/outXMLReturnedShoro');
+const HistoryOrder = require('../models/historyOrder');
 const { pubsub } = require('../graphql/index');
 const RELOAD_ORDER = 'RELOAD_ORDER';
 
@@ -19,22 +20,46 @@ connectDB.connect()
 if(!isMainThread) {
     cron.schedule('1 3 * * *', async() => {
         try {
-            //автоприем заказов
-            let dateStart = new Date()
-            dateStart.setHours(3, 0, 0, 0)
+            //автоприемом только за сегодня
+            const dateEnd = new Date()
+            dateEnd.setHours(3, 0, 0, 0)
+            const dateStart = new Date(dateEnd)
             dateStart.setDate(dateStart.getDate() - 1)
-            let dateEnd = new Date(dateStart)
-            dateEnd.setDate(dateEnd.getDate() + 1)
-            let organizations = await Organization.find({autoAcceptNight: true}).distinct('_id').lean()
-            let orders = await Invoice.find({
+            //несинхронизованные заказы
+            let organizations = await Organization.find({pass: {$nin: ['', null]}}).distinct('_id').lean()
+            const unsynces = await Invoice.find({
+                $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt: dateEnd}}],
+                sync: {$nin: [1, 2]},
+                cancelClient: null,
+                cancelForwarder: null,
+                del: {$ne: 'deleted'},
+                taken: true,
+                organization: {$in: organizations},
+            })
+                .select('_id orders')
+                .lean()
+            let unsyncorders = [], unsyncinvoices = []
+            for(let i = 0; i<unsynces.length;i++) {
+                unsyncorders = [...unsyncorders, ...unsynces[i].orders]
+                unsyncinvoices = [...unsyncinvoices, unsynces[i]._id]
+            }
+            await Order.updateMany({_id: {$in: unsyncorders}}, {status: 'обработка'})
+            await Invoice.updateMany({_id: {$in: unsyncinvoices}}, {
+                taken: false,
+                cancelClient: null,
+                cancelForwarder: null,
+            })
+            //автоприем заказов
+            organizations = await Organization.find({autoAcceptNight: true}).distinct('_id').lean()
+            let invoices = await Invoice.find({
                 del: {$ne: 'deleted'},
                 taken: {$ne: true},
                 cancelClient: null,
                 cancelForwarder: null,
                 $and: [{createdAt: {$gte: dateStart}}, {createdAt: {$lt: dateEnd}}],
-                organization: {$in: organizations}
+                organization: {$in: organizations},
             })
-            //.select('client organization orders dateDelivery paymentMethod number _id inv')
+                //.select('client organization orders dateDelivery paymentMethod number _id inv')
                 .populate({
                     path: 'client',
                     //  select: '_id'
@@ -55,26 +80,48 @@ if(!isMainThread) {
                 .populate({path: 'provider'})
                 .populate({path: 'sale'})
                 .populate({path: 'forwarder'})
-            for(let i = 0; i<orders.length;i++) {
-                orders[i].taken = true
-                await Order.updateMany({_id: {$in: orders[i].orders.map(element=>element._id)}}, {status: 'принят'})
-                orders[i].adss = await checkAdss(orders[i])
-                if(orders[i].organization.pass&&orders[i].organization.pass.length){
-                    orders[i].sync = await setSingleOutXML(orders[i])
+            for(let i = 0; i<invoices.length;i++) {
+                invoices[i].taken = true
+                await Order.updateMany({_id: {$in: invoices[i].orders.map(element=>element._id)}}, {status: 'принят'})
+                invoices[i].adss = await checkAdss(invoices[i])
+                if (invoices[i].organization.pass && invoices[i].organization.pass.length) {
+                    invoices[i].sync = await setSingleOutXML(invoices[i])
                 }
-                await orders[i].save()
-                orders[i].adss = await Ads.find({_id: {$in: orders[i].adss}})
+                ///заглушка
+                else {
+                    let _object = new ModelsError({
+                        err: `${invoices[i].number} Отсутствует organization.pass ${invoices[i].organization.pass}`,
+                        path: 'автоприем'
+                    });
+                    await ModelsError.create(_object)
+                }
+                invoices[i].editor = 'автоприем'
+                let objectHistoryOrder = new HistoryOrder({
+                    invoice: invoices[i]._id,
+                    orders: invoices[i].orders.map(order=>{
+                        return {
+                            item: order.name,
+                            count: order.count,
+                            consignment: order.consignment,
+                            returned: order.returned
+                        }
+                    }),
+                    editor: 'автоприем',
+                });
+                await HistoryOrder.create(objectHistoryOrder);
+                await invoices[i].save()
+                invoices[i].adss = await Ads.find({_id: {$in: invoices[i].adss}})
                 pubsub.publish(RELOAD_ORDER, { reloadOrder: {
-                    who: null,
-                    client: orders[i].client._id,
-                    agent: orders[i].agent?orders[i].agent._id:undefined,
-                    superagent: undefined,
-                    organization: orders[i].organization._id,
-                    distributer: undefined,
-                    invoice: orders[i],
-                    manager: undefined,
-                    type: 'SET'
-                } });
+                        who: null,
+                        client: invoices[i].client._id,
+                        agent: invoices[i].agent?invoices[i].agent._id:undefined,
+                        superagent: undefined,
+                        organization: invoices[i].organization._id,
+                        distributer: undefined,
+                        invoice: invoices[i],
+                        manager: undefined,
+                        type: 'SET'
+                    } });
             }
             //генерация акционых заказов
             organizations = await Organization.find({
