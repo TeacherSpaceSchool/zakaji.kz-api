@@ -107,7 +107,7 @@ let start = async () => {
     await reductionCategory()
     await reductionSubCategory()
     //await reductionToRoute()
-    await reductionToClient()
+    //await reductionToClient()
     //await reductionToOrganization()
     //await reductionToItem()
     //await reductionToUser()
