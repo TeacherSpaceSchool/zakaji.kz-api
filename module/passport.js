@@ -159,7 +159,7 @@ const signinuser = (req, res) => {
                 const token = await jwt.sign(payload, jwtsecret); //здесь создается JWT
                 await res.status(200);
                 await res.clearCookie('jwt');
-                await res.cookie('jwt', token, {maxAge: 10000*24*60*60*1000, sameSite: 'Lax'}).end(token);
+                await res.cookie('jwt', token, {maxAge: 10000*24*60*60*1000, sameSite: 'Lax' , secure: true}).end(token);
             } else {
                 res.status(401);
                 res.end('Login failed',401)
