@@ -10,6 +10,7 @@ const Integrate1C = require('../models/integrate1C');
 const { deleteFile, urlMain, saveImage } = require('../module/const');
 const { createJwtGQL } = require('../module/passport');
 const mongoose = require('mongoose')
+const uuidv1 = require('uuid/v1');
 
 const type = `
   type Client {
@@ -474,6 +475,26 @@ const resolversMutation = {
             client.notification=false
             client = new Client(client);
             await Client.create(client);
+
+            if(user.organization) {
+                const integrate1C = new Integrate1C({
+                    item: null,
+                    client: client._id,
+                    agent: null,
+                    ecspeditor: null,
+                    organization: user.organization,
+                    guid: await uuidv1(),
+                });
+                await Integrate1C.create(integrate1C)
+                if(user.role==='агент') {
+                    const district = await District.findOne({
+                        agent: user.employment
+                    })
+                    district.client.push(client._id)
+                    district.markModified('client');
+                    await district.save()
+                }
+            }
         }
         return {data: 'OK'}
     },
