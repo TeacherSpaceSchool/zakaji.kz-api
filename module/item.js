@@ -1,10 +1,24 @@
 const Item = require('../models/item');
+const Integrate1C = require('../models/integrate1C');
+const Order = require('../models/order');
+const Invoice = require('../models/invoice');
+const SingleOutXML = require('../models/singleOutXML');
 
 module.exports.reductionToItem = async() => {
-    let items = await Item.find({city: {$ne: 'Алматы'}})
-    console.log(`reductionToItem: ${items.length}`)
-    for(let i = 0; i<items.length;i++){
-        items[i].city = 'Алматы'
-        await items[i].save();
-    }
+    const date = new Date('2023-11-01T00:00:00.000Z')
+    const items = await Item.find({createdAt: {$lte: date}})
+        .distinct('_id')
+        .lean()
+    const deletedIntegrates = await Integrate1C.deleteMany({item: {$in: items}})
+    const deletedOrders = await Order.deleteMany()
+    const deletedInvoices = await Invoice.deleteMany()
+    const deletedSingleOutXML = await SingleOutXML.deleteMany()
+    const deletedItems = await Item.deleteMany({createdAt: {$lte: date}})
+    console.log({
+        deletedIntegrates: deletedIntegrates.n,
+        deletedOrders: deletedOrders.n,
+        deletedInvoices: deletedInvoices.n,
+        deletedSingleOutXML: deletedSingleOutXML.n,
+        deletedItems: deletedItems.n
+    })
 }

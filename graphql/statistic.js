@@ -1,5 +1,5 @@
 //5e3fc975934d024d86c66bd9
-//7 931 829 сом
+//7 931 829 тенге
 //5 682 шт
 //Иязов Адилет 0 702 533 146
 //Баялиев Адилет
@@ -853,7 +853,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['товар', 'клиентов(шт)', 'заказов(шт)', 'выручка(сом)', 'отказов(сом)', 'средний чек(сом)', 'процент'],
+                columns: ['товар', 'клиентов(шт)', 'заказов(шт)', 'выручка(тенге)', 'отказов(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -1135,7 +1135,7 @@ const resolvers = {
             ]
 
             data = {
-                columns: [organization?'район':'организация', 'клиенты(шт)', 'заказы(шт)', 'выручка(сом)', 'отказы(сом)', 'конс(сом)', 'средний чек(сом)', 'процент'],
+                columns: [organization?'район':'организация', 'клиенты(шт)', 'заказы(шт)', 'выручка(тенге)', 'отказы(тенге)', 'конс(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             }
             return data;
@@ -1245,7 +1245,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['клиент', 'выручка(сом)', 'выполнен(шт)', 'отказы(сом)', 'конс(сом)', 'средний чек(сом)', 'процент'],
+                columns: ['клиент', 'выручка(тенге)', 'выполнен(шт)', 'отказы(тенге)', 'конс(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -1362,7 +1362,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['акция', 'выручка(сом)', 'выполнен(шт)', 'возврат(сом)', 'конс(сом)', 'процент'],
+                columns: ['акция', 'выручка(тенге)', 'выполнен(шт)', 'возврат(тенге)', 'конс(тенге)', 'процент'],
                 row: data
             };
         }
@@ -1489,7 +1489,7 @@ const resolvers = {
             ]
             //console.timeEnd('get BD')
             return {
-                columns: ['товар', 'выручка(сом)', 'выполнен(шт)', 'отказов(шт)', 'конс(сом)', 'средний чек(сом)', 'процент'],
+                columns: ['товар', 'выручка(тенге)', 'выполнен(шт)', 'отказов(шт)', 'конс(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -1735,7 +1735,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: [type==='districts'?'район':type==='agents'?'агент':'организация', 'выручка(сом)', 'выполнен(шт)', 'отказов(сом)', 'конс(сом)', 'средний чек(сом)', 'процент'],
+                columns: [type==='districts'?'район':type==='agents'?'агент':'организация', 'выручка(тенге)', 'выполнен(шт)', 'отказов(тенге)', 'конс(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -1915,7 +1915,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: [company?'район':'организация', 'выручка(сом)', 'выполнен(шт)', 'отказы(сом)', 'конс(сом)', 'средний чек(сом)', 'клиенты', 'процент'],
+                columns: [company?'район':'организация', 'выручка(тенге)', 'выполнен(шт)', 'отказы(тенге)', 'конс(тенге)', 'средний чек(тенге)', 'клиенты', 'процент'],
                 row: data
             };
         }
@@ -2058,7 +2058,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['подбренд', 'выручка(сом)', 'выполнен(шт)', 'отказы(сом)', 'конс(сом)', 'средний чек(сом)', 'процент'],
+                columns: ['подбренд', 'выручка(тенге)', 'выполнен(шт)', 'отказы(тенге)', 'конс(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -2186,7 +2186,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['часы', 'выручка(сом)', 'выручка online(сом)', 'выручка offline(сом)', 'выполнен(шт)', 'выполнен online(шт)', 'выполнен offline(шт)'],
+                columns: ['часы', 'выручка(тенге)', 'выручка online(тенге)', 'выручка offline(тенге)', 'выполнен(шт)', 'выполнен online(шт)', 'выполнен offline(шт)'],
                 row: data
             };
         }
@@ -2380,7 +2380,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['район', 'выручка(сом)', 'выполнен(шт)', 'отказы(сом)', 'конс(сом)', 'прибыль(сом)', 'средний чек(сом)', 'клиенты', 'процент'],
+                columns: ['район', 'выручка(тенге)', 'выполнен(шт)', 'отказы(тенге)', 'конс(тенге)', 'прибыль(тенге)', 'средний чек(тенге)', 'клиенты', 'процент'],
                 row: data
             };
         }
@@ -2816,7 +2816,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: [company?'район':'организация', 'сумма(сом)', 'выполнен(шт)', 'процент'],
+                columns: [company?'район':'организация', 'сумма(тенге)', 'выполнен(шт)', 'процент'],
                 row: data
             };
         }
@@ -2982,7 +2982,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: [company?'агент':'агент', 'выручка(сом)', 'выполнен(шт)', 'отказов(сом)', 'конс(сом)', 'средний чек(сом)', 'процент'],
+                columns: [company?'агент':'агент', 'выручка(тенге)', 'выполнен(шт)', 'отказов(тенге)', 'конс(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -3178,7 +3178,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['агент', 'выручка(сом)', 'выполнен(шт)', 'отказов(сом)', 'конс(сом)', 'прибыль(сом)', 'средний чек(сом)', 'процент'],
+                columns: ['агент', 'выручка(тенге)', 'выполнен(шт)', 'отказов(тенге)', 'конс(тенге)', 'прибыль(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -3288,7 +3288,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['организация', 'выручка(сом)', 'выполнен(шт)', 'отказов(сом)', 'конс(сом)', 'средний чек(сом)', 'процент'],
+                columns: ['организация', 'выручка(тенге)', 'выполнен(шт)', 'отказов(тенге)', 'конс(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -3410,7 +3410,7 @@ const resolvers = {
                 ...data
             ]
             return {
-                columns: ['организация', 'выручка(сом)', 'выполнен(шт)', 'отказов(сом)', 'конс(сом)', 'прибыль(сом)', 'средний чек(сом)', 'процент'],
+                columns: ['организация', 'выручка(тенге)', 'выполнен(шт)', 'отказов(тенге)', 'конс(тенге)', 'прибыль(тенге)', 'средний чек(тенге)', 'процент'],
                 row: data
             };
         }
@@ -3792,12 +3792,12 @@ const resolvers = {
                 row+=1;
                 worksheet.getCell(`A${row}`).font = {bold: true};
                 worksheet.getCell(`A${row}`).value = 'Сумма:';
-                worksheet.getCell(`B${row}`).value = `${data[i].allPrice} сом`;
+                worksheet.getCell(`B${row}`).value = `${data[i].allPrice} тенге`;
                 if(data[i].consignmentPrice>0) {
                     row+=1;
                     worksheet.getCell(`A${row}`).font = {bold: true};
                     worksheet.getCell(`A${row}`).value = 'Консигнации:';
-                    worksheet.getCell(`B${row}`).value = `${data[i].consignmentPrice} сом`;
+                    worksheet.getCell(`B${row}`).value = `${data[i].consignmentPrice} тенге`;
                 }
                 row+=1;
                 worksheet.getCell(`A${row}`).font = {bold: true};
@@ -3818,8 +3818,8 @@ const resolvers = {
                         data[i].orders[i1].item.name,
                         `${data[i].orders[i1].count} ${data[i].orders[i1].item.unit&&data[i].orders[i1].item.unit.length>0?data[i].orders[i1].item.unit:'шт'}`,
                         `${checkFloat(data[i].orders[i1].count/(data[i].orders[i1].packaging?data[i].orders[i1].packaging:1))} уп`,
-                        `${data[i].orders[i1].allPrice} сом`,
-                        data[i].orders[i1].consignmentPrice>0?`${data[i].orders[i1].consignmentPrice} сом`:''
+                        `${data[i].orders[i1].allPrice} тенге`,
+                        data[i].orders[i1].consignmentPrice>0?`${data[i].orders[i1].consignmentPrice} тенге`:''
                     ]);
                 }
             }
@@ -3994,7 +3994,7 @@ const resolvers = {
                 worksheet.getCell(`C${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                 worksheet.getCell(`C${row}`).value = `${checkFloat(items[keys[i]].count/(items[keys[i]].packaging?items[keys[i]].packaging:1))} уп`;
                 worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                worksheet.getCell(`D${row}`).value = `${items[keys[i]].allPrice} сом`;
+                worksheet.getCell(`D${row}`).value = `${items[keys[i]].allPrice} тенге`;
                 if(allTonnage){
                     worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                     worksheet.getCell(`E${row}`).value = `${items[keys[i]].allTonnage} кг`;
@@ -4014,7 +4014,7 @@ const resolvers = {
             worksheet.getCell(`C${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
             worksheet.getCell(`C${row}`).value = '';
             worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-            worksheet.getCell(`D${row}`).value = `${allPrice} сом`;
+            worksheet.getCell(`D${row}`).value = `${allPrice} тенге`;
             if(allTonnage){
                 worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                 worksheet.getCell(`E${row}`).value = `${allTonnage} кг`;
@@ -4134,16 +4134,16 @@ const resolvers = {
                     worksheet.getCell(`A${row}`).alignment = { wrapText: true };
                     worksheet.getCell(`A${row}`).value = data[i].orders[i1].item.name;
                     worksheet.getCell(`B${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                    worksheet.getCell(`B${row}`).value = `${data[i].orders[i1].item.price} сом`;
+                    worksheet.getCell(`B${row}`).value = `${data[i].orders[i1].item.price} тенге`;
                     worksheet.getCell(`C${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                     worksheet.getCell(`C${row}`).value = `${data[i].orders[i1].count} шт`;
                     worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                     worksheet.getCell(`D${row}`).value = `${checkFloat(data[i].orders[[i1]].count/(data[i].orders[[i1]].packaging?data[i].orders[[i1]].packaging:1))} уп`;
                     worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                    worksheet.getCell(`E${row}`).value = `${data[i].orders[[i1]].allPrice} сом`;
+                    worksheet.getCell(`E${row}`).value = `${data[i].orders[[i1]].allPrice} тенге`;
                     if(data[i].orders[[i1]].consignmentPrice>0) {
                         worksheet.getCell(`F${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                        worksheet.getCell(`F${row}`).value = `${data[i].orders[[i1]].consignmentPrice} сом`;
+                        worksheet.getCell(`F${row}`).value = `${data[i].orders[[i1]].consignmentPrice} тенге`;
                     }
                 }
 
@@ -4152,7 +4152,7 @@ const resolvers = {
                 worksheet.getCell(`C${row}`).font = {bold: true};
                 worksheet.getCell(`C${row}`).value = 'Сумма:';
                 worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                worksheet.getCell(`D${row}`).value = `${data[i].allPrice} сом`;
+                worksheet.getCell(`D${row}`).value = `${data[i].allPrice} тенге`;
                 row+=1;
                 worksheet.getCell(`A${row}`).font = {bold: true};
                 worksheet.getCell(`A${row}`).value = 'Отпустил:';

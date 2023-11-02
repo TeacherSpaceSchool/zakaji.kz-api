@@ -254,7 +254,7 @@ const resolvers = {
                     worksheet.getCell(`C${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                     worksheet.getCell(`C${row}`).value = `${Math.round(items[keysOrganization[i]][keys[i1]].count/(items[keysOrganization[i]][keys[i1]].packaging?items[keysOrganization[i]][keys[i1]].packaging:1))} уп`;
                     worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                    worksheet.getCell(`D${row}`).value = `${checkFloat(items[keysOrganization[i]][keys[i1]].allPrice)} сом`;
+                    worksheet.getCell(`D${row}`).value = `${checkFloat(items[keysOrganization[i]][keys[i1]].allPrice)} тенге`;
                     if(allTonnage){
                         worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                         worksheet.getCell(`E${row}`).value = `${checkInt(items[keysOrganization[i]][keys[i1]].allTonnage)} кг`;
@@ -274,7 +274,7 @@ const resolvers = {
                 worksheet.getCell(`C${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                 worksheet.getCell(`C${row}`).value = '';
                 worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                worksheet.getCell(`D${row}`).value = `${checkFloat(allPrice[keysOrganization[i]])} сом`;
+                worksheet.getCell(`D${row}`).value = `${checkFloat(allPrice[keysOrganization[i]])} тенге`;
                 if(allTonnage){
                     worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                     worksheet.getCell(`E${row}`).value = `${checkInt(allTonnage[keysOrganization[i]])} кг`;
@@ -360,7 +360,7 @@ const resolvers = {
                     row+=1;
                     worksheet.getCell(`A${row}`).font = {bold: true};
                     worksheet.getCell(`A${row}`).value = 'Всего консигнаций:';
-                    worksheet.getCell(`B${row}`).value = `${consignation} сом`;
+                    worksheet.getCell(`B${row}`).value = `${consignation} тенге`;
                 }
                 if(data[i].adss) {
                     row+=1;
@@ -401,16 +401,16 @@ const resolvers = {
                     worksheet.getCell(`A${row}`).alignment = { wrapText: true };
                     worksheet.getCell(`A${row}`).value = data[i].orders[i1].item.name;
                     worksheet.getCell(`B${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                    worksheet.getCell(`B${row}`).value = `${data[i].orders[i1].item.price} сом`;
+                    worksheet.getCell(`B${row}`).value = `${data[i].orders[i1].item.price} тенге`;
                     worksheet.getCell(`C${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                     worksheet.getCell(`C${row}`).value = `${data[i].orders[i1].count} шт`;
                     worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                     worksheet.getCell(`D${row}`).value = `${Math.round(data[i].orders[i1].count/(data[i].orders[i1].item.packaging?data[i].orders[i1].item.packaging:1))} уп`;
                     worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                    worksheet.getCell(`E${row}`).value = `${data[i].orders[i1].allPrice} сом`;
+                    worksheet.getCell(`E${row}`).value = `${data[i].orders[i1].allPrice} тенге`;
                     if(data[i].orders[i1].consignmentPrice>0) {
                         worksheet.getCell(`F${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                        worksheet.getCell(`F${row}`).value = `${data[i].orders[i1].consignmentPrice} сом`;
+                        worksheet.getCell(`F${row}`).value = `${data[i].orders[i1].consignmentPrice} тенге`;
                     }
                 }
                 if(data[i].adss) {
@@ -469,13 +469,13 @@ const resolvers = {
                         worksheet.getCell(`A${row}`).alignment = { wrapText: true };
                         worksheet.getCell(`A${row}`).value = `Акционный ${data[i].adss[i1].item.name}`;
                         worksheet.getCell(`B${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                        worksheet.getCell(`B${row}`).value = `${data[i].adss[i1].item.price} сом`;
+                        worksheet.getCell(`B${row}`).value = `${data[i].adss[i1].item.price} тенге`;
                         worksheet.getCell(`C${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                         worksheet.getCell(`C${row}`).value = `${count} шт`;
                         worksheet.getCell(`D${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
                         worksheet.getCell(`D${row}`).value = `${Math.round(count/(data[i].adss[i1].item.packaging?data[i].adss[i1].item.packaging:1))} уп`;
                         worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                        worksheet.getCell(`E${row}`).value = '0 сом';
+                        worksheet.getCell(`E${row}`).value = '0 тенге';
                     }
                 }
 
@@ -484,7 +484,7 @@ const resolvers = {
                 worksheet.getCell(`D${row}`).font = {bold: true};
                 worksheet.getCell(`D${row}`).value = 'Сумма:';
                 worksheet.getCell(`E${row}`).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                worksheet.getCell(`E${row}`).value = `${data[i].allPrice} сом`;
+                worksheet.getCell(`E${row}`).value = `${data[i].allPrice} тенге`;
                 row+=1;
                 worksheet.getCell(`A${row}`).font = {bold: true};
                 worksheet.getCell(`A${row}`).value = 'Отпустил:';
